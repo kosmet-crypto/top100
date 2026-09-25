@@ -245,8 +245,8 @@ const EN = {
   '{0} pesama':'{0} songs','godine {0}':'years {0}','Nema godina':'No years','Nema kolone sa nazivom pesme.':'No column with song titles.',
   'Zbir se ne slaže u {0} redova':'Total does not match in {0} rows','Zbir se slaže u svim redovima':'Total matches in all rows',
   'tabela kaže {0}, godine daju {1}':'sheet says {0}, years add up to {1}','Uvezi':'Import','Ništa nije izabrano.':'Nothing selected.',
-  'Uvezeno: {0} pesama u {1} lista':'Imported: {0} songs into {1} lists','Stari .xls nije podržan. Sačuvaj tabelu kao .xlsx.':'Old .xls files are not supported. Save the sheet as .xlsx.',
-  'Ovaj fajl ne može da se pročita.':'This file cannot be read.','Ovaj uređaj ne može da otvori .xlsx. Sačuvaj kao [[CSV]].':'This device cannot open .xlsx. Save as [[CSV]].',
+  'Uvezeno: {0} pesama u {1} lista':'Imported: {0} songs into {1} lists','Stari [[.xls]] nije podržan. Sačuvaj tabelu kao [[.xlsx]].':'Old [[.xls]] files are not supported. Save the sheet as [[.xlsx]].',
+  'Ovaj fajl ne može da se pročita.':'This file cannot be read.','Ovaj uređaj ne može da otvori [[.xlsx]]. Sačuvaj kao [[CSV]].':'This device cannot open [[.xlsx]]. Save as [[CSV]].',
   'Rezervna kopija je vraćena':'Backup restored','Ovo nije rezervna kopija Top 100.':'This is not a Top 100 backup.',
   'Zameniti sve trenutne podatke podacima iz kopije?':'Replace all current data with the backup?','Zameni':'Replace',
   'Memorija je puna. Napravi rezervnu kopiju i obriši stare liste.':'Storage is full. Back up and delete old lists.',
@@ -257,6 +257,7 @@ const EN = {
   'Lista po godini {0}. Kretanje je u odnosu na {1}.':'Chart for {0}. Movement is compared to {1}.',
   'Nova pesma':'New song','U krugu':'In round','Pokrenut':'Started','Poništi':'Undo','Sve godine':'All years','Tekuća godina':'Current year',
   'Poslednjih {0} godina':'Last {0} years',
+  '[[PDF]] i slike ne mogu da se uvezu. Preuzmi tabelu kao [[Microsoft Excel (.xlsx)]].':'[[PDF]] files and images cannot be imported. Download the sheet as [[Microsoft Excel (.xlsx)]].',
   'Starija kopija iste liste, zato je isključena. Najnoviji list već ima sve godine.':'Older copy of the same list, so it is turned off. The newest sheet already has all years.'
 };
 const TR_L = {'Lj':'Љ','LJ':'Љ','lj':'љ','Nj':'Њ','NJ':'Њ','nj':'њ','Dž':'Џ','DŽ':'Џ','dž':'џ'};
@@ -859,8 +860,13 @@ async function readTable(file){
   const buf = await file.arrayBuffer(), u = new Uint8Array(buf);
   if(u[0] === 0x50 && u[1] === 0x4b) return readXlsx(buf);
   if(u[0] === 0xD0 && u[1] === 0xCF) throw new Error('xls');
+  if(u[0] === 0x25 && u[1] === 0x50 && u[2] === 0x44 && u[3] === 0x46) throw new Error('pdf');
   let enc = 'utf-8'; if(u[0] === 0xFF && u[1] === 0xFE) enc = 'utf-16le'; else if(u[0] === 0xFE && u[1] === 0xFF) enc = 'utf-16be';
-  return [{ name:file.name.replace(/\.[^.]+$/, ''), hidden:false, rows:csvRows(new TextDecoder(enc).decode(buf)) }];
+  const text = new TextDecoder(enc).decode(buf);
+  /* Not a text table (image, document…): lots of broken or control characters. */
+  const junk = (text.slice(0, 20000).match(/[\uFFFD\u0000-\u0008\u000E-\u001F]/g) || []).length;
+  if(junk > Math.min(text.length, 20000) * .02) throw new Error('binary');
+  return [{ name:file.name.replace(/\.[^.]+$/, ''), hidden:false, rows:csvRows(text) }];
 }
 const numv = s => { s = String(s ?? '').trim().replace(/\s/g,''); if(!s) return null; if(/^-?\d+,\d+$/.test(s)) s = s.replace(',','.'); const n = Number(s); return isFinite(n) ? n : null; };
 const yearOf = h => { const m = /^((?:19|20)\d\d)(?:\.0*)?\.?$/.exec(String(h).trim()); return m ? +m[1] : null; };
@@ -924,7 +930,7 @@ function pickImportFile(){
   inp.onchange = async () => {
     const f = inp.files[0]; if(!f) return;
     try{ openImport(await readTable(f)); }
-    catch(e){ toast(e.message === 'xls' ? T('Stari .xls nije podržan. Sačuvaj tabelu kao .xlsx.') : e.message === 'nodecomp' ? T('Ovaj uređaj ne može da otvori .xlsx. Sačuvaj kao [[CSV]].') : T('Ovaj fajl ne može da se pročita.')); }
+    catch(e){ toast(e.message === 'xls' ? T('Stari [[.xls]] nije podržan. Sačuvaj tabelu kao [[.xlsx]].') : e.message === 'pdf' || e.message === 'binary' ? T('[[PDF]] i slike ne mogu da se uvezu. Preuzmi tabelu kao [[Microsoft Excel (.xlsx)]].') : e.message === 'nodecomp' ? T('Ovaj uređaj ne može da otvori [[.xlsx]]. Sačuvaj kao [[CSV]].') : T('Ovaj fajl ne može da se pročita.')); }
   };
   inp.click();
 }
