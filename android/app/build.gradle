@@ -1,0 +1,62 @@
+plugins {
+    id 'com.android.application'
+}
+
+// The web app lives at the repo root; copy it into the APK so it works offline.
+def webRoot = rootProject.file('..')
+tasks.register('copyWebApp', Copy) {
+    from(webRoot) {
+        include 'index.html', 'manifest.json', 'icons/**'
+    }
+    into 'src/main/assets/www'
+}
+preBuild.dependsOn copyWebApp
+
+android {
+    namespace 'app.top100'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'app.top100'
+        minSdk 26
+        targetSdk 34  // 35 forces edge-to-edge; the page does not pad for system bars in a WebView
+        // CI passes the run number so each new APK installs over the previous one.
+        def runNumber = System.getenv('GITHUB_RUN_NUMBER')
+        def build = runNumber ? (runNumber as int) : 1
+        versionCode build
+        versionName "1.0.${build}"
+        // Where the app looks for newer APKs (GitHub Releases of this repo).
+        buildConfigField 'String', 'UPDATE_REPO', "\"${System.getenv('GITHUB_REPOSITORY') ?: 'kosmet-crypto/top100'}\""
+    }
+
+    signingConfigs {
+        // Fixed key committed to the repo so every build can update the installed app.
+        // Fine for sideloading; use a private key (GitHub secret) before publishing to Google Play.
+        release {
+            storeFile file('top100.keystore')
+            storePassword 'top100app'
+            keyAlias 'top100'
+            keyPassword 'top100app'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+}

@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0e13">
+<!-- Android app: bridge features this page needs (see WebUpdater.NATIVE_API). Raise it only when the page
+     starts calling a new Top100Android method; older apps then keep their page until the APK is updated. -->
+<meta name="top100-native-api" content="1">
+<title>Top 100</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Top 100">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0e13; --surface:#16161e; --surface2:#1f202b; --line:#2a2b3a;
+  --text:#f4f4f8; --muted:#8e90a6; --accent:#ff5d4d; --accent-ink:#ffffff;
+  --accent-soft:rgba(255,93,77,.15); --pos:#38d68f; --neg:#ff6b7f; --gold:#ffc24b;
+  --pos-soft:rgba(56,214,143,.14); --neg-soft:rgba(255,107,127,.14); --gold-soft:rgba(255,194,75,.14);
+  --shadow:0 18px 40px -18px rgba(0,0,0,.75);
+  --font:"Manrope",ui-rounded,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+:root[data-theme=light]{
+  --bg:#f4f3f7; --surface:#ffffff; --surface2:#eeedf4; --line:#e0dfea;
+  --text:#16151d; --muted:#6a6a80; --accent:#e8412f; --accent-ink:#ffffff;
+  --accent-soft:rgba(232,65,47,.1); --pos:#0f9d63; --neg:#dc3852; --gold:#c98a00;
+  --pos-soft:rgba(15,157,99,.1); --neg-soft:rgba(220,56,82,.1); --gold-soft:rgba(201,138,0,.12);
+  --shadow:0 18px 40px -22px rgba(40,30,60,.35);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme=dark]){
+    --bg:#f4f3f7; --surface:#ffffff; --surface2:#eeedf4; --line:#e0dfea;
+    --text:#16151d; --muted:#6a6a80; --accent:#e8412f; --accent-ink:#ffffff;
+    --accent-soft:rgba(232,65,47,.1); --pos:#0f9d63; --neg:#dc3852; --gold:#c98a00;
+    --pos-soft:rgba(15,157,99,.1); --neg-soft:rgba(220,56,82,.1); --gold-soft:rgba(201,138,0,.12);
+    --shadow:0 18px 40px -22px rgba(40,30,60,.35);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.35;min-height:100vh;-webkit-font-smoothing:antialiased}
+body.noscroll{overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+#app{max-width:680px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 10px) 14px calc(env(safe-area-inset-bottom,0px) + 110px)}
+.top{display:flex;align-items:center;justify-content:space-between;padding:4px 2px 10px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:1.12rem;letter-spacing:-.02em}
+.brand svg{width:28px;height:28px}
+.icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--muted)}
+.icon:active{background:var(--surface2)}
+.icon svg{width:22px;height:22px}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0 12px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:8px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:.9rem;white-space:nowrap;color:var(--muted)}
+.chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.chip.sm{padding:6px 12px;font-size:.84rem}
+.chip.add{border-style:dashed}
+.chip .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-left:6px;vertical-align:middle}
+.lhead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin:6px 2px 12px}
+.lhead h1{font-size:1.55rem;font-weight:800;letter-spacing:-.03em;line-height:1.15}
+.lhead p{color:var(--muted);font-weight:600;font-size:.86rem;margin-top:3px}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:12px}
+.seg button{flex:1;padding:9px 6px;border-radius:10px;font-weight:700;font-size:.9rem;color:var(--muted)}
+.seg button.on{background:var(--surface2);color:var(--text)}
+.search{display:flex;gap:8px;margin-bottom:10px}
+.search input{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;font-weight:600;outline:none}
+.search input:focus{border-color:var(--accent)}
+.search .icon{background:var(--surface);border:1px solid var(--line);width:46px;height:46px;border-radius:14px;color:var(--text)}
+.rows{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.row{display:grid;grid-template-columns:34px 38px 1fr auto;align-items:center;gap:6px;padding:10px 12px 10px 8px;border-top:1px solid var(--line);cursor:pointer}
+.row:first-child{border-top:0}
+.row:active{background:var(--surface2)}
+.pos{font-weight:800;font-size:1.02rem;text-align:center;font-variant-numeric:tabular-nums}
+.row.p1 .pos{color:var(--gold)}
+.mv{font-size:.74rem;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mv.up{color:var(--pos)} .mv.dn{color:var(--neg)} .mv.eq{color:var(--muted);opacity:.6}
+.badge{display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.04em;padding:3px 5px;border-radius:6px}
+.badge.new{background:var(--accent-soft);color:var(--accent)}
+.badge.re{background:var(--gold-soft);color:var(--gold)}
+.main{min-width:0}
+.main .t{font-weight:700;font-size:.98rem;line-height:1.25;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.main .a{color:var(--muted);font-weight:600;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.pl{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--pos);margin-left:6px;vertical-align:middle}
+.sc{text-align:right;font-variant-numeric:tabular-nums}
+.sc b{display:block;font-size:1.05rem;font-weight:800}
+.sc small{display:block;color:var(--muted);font-weight:700;font-size:.72rem;white-space:nowrap}
+.cut{display:block;width:100%;padding:12px;text-align:center;color:var(--muted);font-weight:700;font-size:.82rem;border-top:1px dashed var(--line);background:var(--bg)}
+.empty{text-align:center;color:var(--muted);font-weight:600;padding:36px 20px;line-height:1.5}
+.empty h2{color:var(--text);font-size:1.3rem;font-weight:800;margin-bottom:8px;letter-spacing:-.02em}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:14px;font-weight:800;font-size:.95rem;background:var(--surface2);color:var(--text);border:1px solid var(--line)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{color:var(--neg)}
+.btn.block{display:flex;width:100%}
+.btn:disabled{opacity:.45}
+.btn svg{width:18px;height:18px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.mt{margin-top:12px}
+.fab{position:fixed;right:max(16px,calc(50vw - 324px));bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:20;display:flex;align-items:center;gap:8px;padding:15px 20px;border-radius:18px;background:var(--accent);color:var(--accent-ink);font-weight:800;box-shadow:var(--shadow)}
+.fab svg{width:20px;height:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:10px}
+.card h3{font-size:1rem;font-weight:800;margin-bottom:4px}
+.card p,.note{color:var(--muted);font-weight:600;font-size:.86rem;line-height:1.45}
+.hist{cursor:pointer}
+.hist .d{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.hist .d b{font-weight:800}
+.hist .d span{color:var(--muted);font-weight:700;font-size:.82rem}
+/* round */
+.rhead{background:var(--accent-soft);border:1px solid var(--accent);border-radius:18px;padding:12px 14px;margin:4px 0 12px}
+.rhead h1{font-size:1.2rem;font-weight:800;letter-spacing:-.02em}
+.rhead p{color:var(--muted);font-weight:600;font-size:.86rem;margin-top:2px}
+.rhead p button{color:var(--accent);font-weight:800;text-decoration:underline}
+.rrow{display:grid;grid-template-columns:30px 1fr auto;grid-template-areas:"pos t t" "pos a ctl";align-items:center;gap:4px 8px;padding:9px 10px 9px 6px;border-top:1px solid var(--line)}
+.rrow .pos{grid-area:pos}
+.rrow .t{grid-area:t;font-weight:700;font-size:.98rem;line-height:1.25}
+.rrow .a{grid-area:a;color:var(--muted);font-weight:600;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.rrow .ctl{grid-area:ctl}
+@media (min-width:560px){ .rrow{grid-template-areas:"pos t ctl" "pos a ctl"} }
+.rrow:first-child{border-top:0}
+.rrow.on{background:var(--accent-soft)}
+.rrow .a span{color:var(--text);opacity:.75}
+.ctl{display:flex;align-items:center;gap:4px}
+.ctl button{width:38px;height:38px;border-radius:11px;background:var(--surface2);font-weight:800;font-size:.9rem}
+.ctl button:active{background:var(--accent);color:var(--accent-ink)}
+.ctl button.mi{color:var(--muted)}
+.ctl input{width:44px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--bg);text-align:center;font-weight:800;outline:none;-moz-appearance:textfield}
+.ctl input:focus{border-color:var(--accent)}
+.ctl input::-webkit-outer-spin-button,.ctl input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.rrow.on .ctl input{border-color:var(--accent);color:var(--accent)}
+.hide{display:none!important}
+.rbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 10px)}
+.rbar .in{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:8px}
+.rbar .info{flex:1;min-width:0;font-weight:700;font-size:.86rem;color:var(--muted)}
+.rbar .info b{color:var(--text)}
+.rbar .icon{background:var(--surface2)}
+/* sheet */
+#sheetRoot{position:fixed;inset:0;z-index:50;display:none}
+#sheetRoot.open{display:block}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.55);animation:fade .2s}
+.sheet{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:600px;max-height:92vh;overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:24px 24px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom,0px) + 22px);animation:up .22s ease-out}
+.sheet .grip{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
+.sheet h2{font-size:1.25rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.sheet .sub{color:var(--muted);font-weight:600;font-size:.88rem;margin-bottom:14px}
+.sheet h4{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 0 8px}
+@keyframes up{from{transform:translate(-50%,40px);opacity:.4}}
+@keyframes fade{from{opacity:0}}
+.lbl{display:block;font-size:.8rem;font-weight:800;color:var(--muted);margin:12px 0 6px}
+.field{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-weight:600;outline:none}
+.field:focus{border-color:var(--accent)}
+select.field{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+.check{display:flex;align-items:center;gap:10px;font-weight:700;margin:14px 0 4px;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--accent)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 4px}
+.tile{background:var(--surface2);border-radius:14px;padding:10px 8px;text-align:center}
+.tile b{display:block;font-size:1.2rem;font-weight:800;font-variant-numeric:tabular-nums}
+.tile span{display:block;color:var(--muted);font-weight:700;font-size:.72rem;margin-top:1px}
+.chart{width:100%;height:auto;display:block;background:var(--surface2);border-radius:14px}
+.years{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.years label{display:block;background:var(--surface2);border-radius:12px;padding:6px 8px 8px}
+.years label span{display:block;font-size:.74rem;font-weight:800;color:var(--muted);margin-bottom:3px}
+.years input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:7px 8px;font-weight:800;outline:none;text-align:center}
+.mini{list-style:none}
+.mini li{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-weight:600;font-size:.92rem}
+.mini li:first-child{border-top:0}
+.mini li .n{width:30px;text-align:center;font-weight:800;color:var(--muted);flex:none}
+.mini li .x{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini li .x small{color:var(--muted);font-weight:600}
+.mini li .r{font-weight:800;flex:none}
+.hero{background:linear-gradient(135deg,var(--accent),#ff9a3d);color:#fff;border-radius:18px;padding:16px;margin:4px 0 6px}
+.hero small{font-weight:800;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.hero b{display:block;font-size:1.25rem;font-weight:800;letter-spacing:-.02em;margin-top:2px}
+.hero span{font-weight:700;opacity:.9}
+.imp{background:var(--surface2);border-radius:16px;padding:12px;margin-bottom:12px}
+.imp.off{opacity:.55}
+.imp .hd{display:flex;align-items:center;gap:10px}
+.imp .hd input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.imp .hd .field{padding:8px 10px}
+.cols{display:flex;gap:8px;overflow-x:auto;padding:4px 0 6px;scrollbar-width:thin}
+.col{flex:none;width:118px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px}
+.col .h{font-weight:800;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.col .v{color:var(--muted);font-weight:600;font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 6px}
+.col select{width:100%;font-size:.78rem;padding:6px 22px 6px 7px;border-radius:9px}
+.col.skip{opacity:.55}
+.warn{background:var(--neg-soft);color:var(--neg);border-radius:12px;padding:9px 12px;font-weight:700;font-size:.84rem;margin-top:8px}
+.warn details summary{cursor:pointer}
+.warn ul{margin:6px 0 0 18px;font-weight:600}
+.ok{background:var(--pos-soft);color:var(--pos);border-radius:12px;padding:9px 12px;font-weight:700;font-size:.84rem;margin-top:8px}
+.prev{color:var(--muted);font-weight:600;font-size:.84rem;margin-top:8px;line-height:1.5}
+.prev b{color:var(--text)}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);transform:translate(-50%,20px);background:var(--text);color:var(--bg);padding:11px 18px;border-radius:14px;font-weight:700;font-size:.9rem;opacity:0;pointer-events:none;transition:.22s;z-index:80;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="sheetRoot"></div>
+<div id="toast"></div>
+<input type="file" id="fileIn" hidden>
+<script>
+'use strict';
+/* ================= i18n =================
+   Strings are written in Serbian Latin. Cyrillic is transliterated from them;
+   English comes from the EN table (falls back to Serbian if missing).
+   Text inside [[ ]] is never transliterated; {0}, {1} are placeholders. */
+const EN = {
+  'Aktuelna':'Current','Lista':'List','Izvođači':'Artists','Istorija':'History','Nova lista':'New list',
+  'Pretraga…':'Search…','Dodaj pesmu':'Add song','Novi krug':'New round','Nastavi krug':'Continue round',
+  'pesama':'songs','top {0}':'top {0}','Prikaži još {0} ispod crte':'Show {0} more below the line',
+  'Sakrij ispod crte':'Hide below the line','Nema pesama.':'No songs.','Ništa nije pronađeno.':'Nothing found.',
+  'Dobrodošli':'Welcome','Napravi listu ili uvezi svoju tabelu iz [[Excel]]-a.':'Create a list or import your [[Excel]] sheet.',
+  'Uvezi iz [[Excel]]-a':'Import from [[Excel]]','Krug u toku':'Round in progress','poeni idu u godinu':'points go to year',
+  'Završio sam':'Done','Odbaci krug':'Discard round','Promeni godinu':'Change year','pesama dobilo poene':'songs got points',
+  'Završiti krug bez poena?':'Finish the round without points?',
+  'Odbaciti ovaj krug? Uneti poeni se brišu.':'Discard this round? The points entered are lost.','Odbaci':'Discard','Otkaži':'Cancel','U redu':'OK',
+  'Sačuvaj':'Save','Obriši':'Delete','Zatvori':'Close','Nova lista je spremna':'The new list is ready','Novi broj 1':'New number 1',
+  'Broj 1 i dalje':'Still number 1','Ušle u top {0}':'Entered the top {0}','Ispale iz top {0}':'Dropped out of the top {0}',
+  'Najveći skokovi':'Biggest climbers','Najveći padovi':'Biggest fallers','Poništi ovaj krug':'Undo this round',
+  'Poništiti poslednji krug? Njegovi poeni se oduzimaju.':'Undo the last round? Its points are removed.','Krug je poništen':'Round undone',
+  'Još nema krugova. Pokreni prvi krug dugmetom „Novi krug“.':'No rounds yet. Start the first one with “New round”.',
+  'Krug':'Round','poena':'points','Početno stanje (uvoz)':'Starting point (import)','Naziv':'Title','Izvođač':'Artist',
+  'Poeni za {0}':'Points for {0}','U plejlisti':'In playlist','Pesma već postoji u ovoj listi.':'This song is already in the list.',
+  'Dodaj':'Add','Unesi naziv pesme.':'Enter the song title.','Pozicija':'Position','Najviša':'Peak','Na #1':'At #1',
+  'U top {0}':'In top {0}','Ukupno':'Total','krugova':'rounds','Kretanje kroz krugove':'Position over rounds','Poeni po godinama':'Points per year',
+  'Izmeni':'Edit','Obrisati pesmu „{0}“?':'Delete the song “{0}”?','Pesma je obrisana':'Song deleted','Premesti u listu':'Move to list',
+  'Sačuvano':'Saved','Podešavanja':'Settings','Jezik':'Language','Tema':'Theme','Automatski':'Automatic','Tamna':'Dark','Svetla':'Light',
+  'Brza dugmad':'Quick buttons','Brojevi odvojeni zarezom, npr. 1, 2, 5':'Numbers separated by commas, e.g. 1, 2, 5','Podaci':'Data',
+  'Uvezi iz [[Excel]]-a ili [[CSV]]-a':'Import from [[Excel]] or [[CSV]]','Izvezi u [[Excel]]':'Export to [[Excel]]',
+  'Napravi rezervnu kopiju':'Back up','Vrati iz rezervne kopije':'Restore from backup','Verzija':'Version','Proveri ažuriranja':'Check for updates',
+  'Podaci se čuvaju samo na ovom uređaju. Povremeno napravi rezervnu kopiju.':'Data is stored only on this device. Back up from time to time.',
+  'Podešavanja liste':'List settings','Koliko mesta prikazuje':'How many places to show','Rangiraj po':'Rank by',
+  'Zbiru svih godina':'Total of all years','Samo tekućoj godini':'Current year only','Poslednjih N godina':'Last N years',
+  'Broj godina':'Number of years','Prikaži kolonu plejliste':'Show playlist column','Obriši listu':'Delete list',
+  'Obrisati listu „{0}“ sa svim pesmama i istorijom?':'Delete the list “{0}” with all songs and history?','Lista je obrisana':'List deleted',
+  'Unesi naziv liste.':'Enter a list name.','Napravi':'Create','Naziv liste':'List name','Uvoz':'Import',
+  'Izaberi šta se uvozi. Kolone su prepoznate automatski, a možeš ih promeniti.':'Choose what to import. Columns are detected automatically; you can change them.',
+  'Uvezi u':'Import into','nova lista':'new list','spoji sa „{0}“':'merge with “{0}”','Preskoči':'Skip','Pesma (naziv)':'Song (title)',
+  'Godina {0}':'Year {0}','Prethodna pozicija':'Previous position','Zbir (samo provera)':'Total (check only)','Plejlista (da/ne)':'Playlist (yes/no)',
+  '{0} pesama':'{0} songs','godine {0}':'years {0}','Nema godina':'No years','Nema kolone sa nazivom pesme.':'No column with song titles.',
+  'Zbir se ne slaže u {0} redova':'Total does not match in {0} rows','Zbir se slaže u svim redovima':'Total matches in all rows',
+  'tabela kaže {0}, godine daju {1}':'sheet says {0}, years add up to {1}','Uvezi':'Import','Ništa nije izabrano.':'Nothing selected.',
+  'Uvezeno: {0} pesama u {1} lista':'Imported: {0} songs into {1} lists','Stari .xls nije podržan. Sačuvaj tabelu kao .xlsx.':'Old .xls files are not supported. Save the sheet as .xlsx.',
+  'Ovaj fajl ne može da se pročita.':'This file cannot be read.','Ovaj uređaj ne može da otvori .xlsx. Sačuvaj kao [[CSV]].':'This device cannot open .xlsx. Save as [[CSV]].',
+  'Rezervna kopija je vraćena':'Backup restored','Ovo nije rezervna kopija Top 100.':'This is not a Top 100 backup.',
+  'Zameniti sve trenutne podatke podacima iz kopije?':'Replace all current data with the backup?','Zameni':'Replace',
+  'Memorija je puna. Napravi rezervnu kopiju i obriši stare liste.':'Storage is full. Back up and delete old lists.',
+  'Sakriven list':'Hidden sheet','Poeni':'Points','Nema izvođača.':'No artists.','Pesme izvođača':'Songs by artist',
+  'Premešteno':'Moved','Izvezeno':'Exported','zbir':'total','Plejlista':'Playlist','Da':'Yes',
+  'Pozicija je iz tabele, a kretanje se računa od nje.':'Position comes from the sheet; movement is counted from it.',
+  'Kretanje se računa od prethodnog kruga.':'Movement is counted from the previous round.',
+  'Lista po godini {0}. Kretanje je u odnosu na {1}.':'Chart for {0}. Movement is compared to {1}.',
+  'Nova pesma':'New song','U krugu':'In round','Pokrenut':'Started','Poništi':'Undo','Sve godine':'All years','Tekuća godina':'Current year',
+  'Poslednjih {0} godina':'Last {0} years'
+};
+const TR_L = {'Lj':'Љ','LJ':'Љ','lj':'љ','Nj':'Њ','NJ':'Њ','nj':'њ','Dž':'Џ','DŽ':'Џ','dž':'џ'};
+const TR_1 = {a:'а',b:'б',v:'в',g:'г',d:'д',đ:'ђ',e:'е',ž:'ж',z:'з',i:'и',j:'ј',k:'к',l:'л',m:'м',n:'н',o:'о',p:'п',r:'р',s:'с',t:'т',ć:'ћ',u:'у',f:'ф',h:'х',c:'ц',č:'ч',š:'ш'};
+function toCyr(s){
+  return s.split(/(\[\[.*?\]\]|\{\d+\})/).map(part => {
+    if(part.startsWith('[[')) return part.slice(2,-2);
+    if(/^\{\d+\}$/.test(part)) return part;
+    let out = '';
+    for(let i=0;i<part.length;i++){
+      const two = part.substr(i,2);
+      if(TR_L[two]){ out += TR_L[two]; i++; continue; }
+      const ch = part[i], lo = ch.toLowerCase(), m = TR_1[lo];
+      out += m ? (ch===lo ? m : m.toUpperCase()) : ch;
+    }
+    return out;
+  }).join('');
+}
+function lang(){ return data.settings.lang || defaultLang(); }
+function defaultLang(){
+  const l = (navigator.language||'').toLowerCase();
+  if(l.startsWith('sr-latn') || /^(hr|bs|sh|me|cnr)/.test(l)) return 'sr';
+  if(l.startsWith('sr')) return 'sr-Cyrl';
+  return 'en';
+}
+function T(s, ...a){
+  const L = lang();
+  let r = L==='en' ? (EN[s] || s) : s;
+  r = L==='sr-Cyrl' ? toCyr(r) : r.replace(/\[\[|\]\]/g,'');
+  return r.replace(/\{(\d+)\}/g, (_,i) => a[i]!=null ? a[i] : '');
+}
+
+/* ================= data ================= */
+const KEY = 'top100';
+function blank(){ return { v:1, lists:[], songs:[], rounds:[], draft:null, cur:null, settings:{ lang:null, theme:'auto', quick:[1,2,5] } }; }
+function load(){
+  try{ const d = JSON.parse(localStorage.getItem(KEY)); if(d && d.v) return fix(d); }catch(e){}
+  return blank();
+}
+function fix(d){
+  const b = blank(), o = Object.assign(b, d);
+  o.settings = Object.assign(blank().settings, d.settings||{});
+  ['lists','songs','rounds'].forEach(k => { if(!Array.isArray(o[k])) o[k] = []; });
+  return o;
+}
+let data = load();
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(data)); return true; }
+  catch(e){ toast(T('Memorija je puna. Napravi rezervnu kopiju i obriši stare liste.')); return false; }
+}
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let idSeq = 0;
+const uid = () => Date.now().toString(36) + (idSeq++).toString(36) + Math.random().toString(36).slice(2,5);
+const CY = () => new Date().getFullYear();
+const fmt = n => { n = +n || 0; return Number.isInteger(n) ? String(n) : String(Math.round(n*10)/10).replace('.', lang()==='en'?'.':','); };
+const fdate = iso => { const d = new Date(iso); return d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear()+'.'; };
+const CYR2LAT = {а:'a',б:'b',в:'v',г:'g',д:'d',ђ:'dj',е:'e',ж:'z',з:'z',и:'i',ј:'j',к:'k',л:'l',љ:'lj',м:'m',н:'n',њ:'nj',о:'o',п:'p',р:'r',с:'s',т:'t',ћ:'c',у:'u',ф:'f',х:'h',ц:'c',ч:'c',џ:'dz',ш:'s'};
+/* Loose form for matching: lower case, Latin, no diacritics, single spaces. */
+function norm(s){
+  return String(s ?? '').toLowerCase().replace(/[а-яђјљњћџ]/g, c => CYR2LAT[c] ?? c).replace(/đ/g,'dj')
+    .normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9#+✓✔✅]+/g,' ').trim();
+}
+const songKey = s => norm(s.title) + '|' + norm(s.artist);
+
+const listById = id => data.lists.find(l => l.id === id);
+function curList(){ return listById(data.cur) || data.lists[0] || null; }
+const songsOf = id => data.songs.filter(s => s.list === id);
+const songById = id => data.songs.find(s => s.id === id);
+const roundsOf = id => data.rounds.filter(r => r.list === id);
+const total = s => { let t = 0; for(const y in s.pts) t += +s.pts[y] || 0; return t; };
+function yearsOf(l, withCur){
+  const ys = new Set(); songsOf(l.id).forEach(s => { for(const y in s.pts) if(+s.pts[y]) ys.add(+y); });
+  if(withCur) ys.add(CY());
+  return [...ys].sort((a,b) => a-b);
+}
+function rankLabel(l){
+  return l.rank==='year' ? T('Tekuća godina') : l.rank==='last' ? T('Poslednjih {0} godina', l.lastN||3) : T('Sve godine');
+}
+function score(s, l, period){
+  if(period !== 'cur') return +s.pts[period] || 0;
+  if(l.rank === 'year') return +s.pts[CY()] || 0;
+  if(l.rank === 'last'){ const from = CY() - (l.lastN||3) + 1; let t = 0; for(const y in s.pts) if(+y >= from) t += +s.pts[y] || 0; return t; }
+  return total(s);
+}
+const orderMap = ids => { const m = new Map(); ids.forEach((id,i) => m.set(id, i+1)); return m; };
+function baseMap(l){ return l.base ? new Map(Object.entries(l.base).map(([k,v]) => [k,+v])) : new Map(); }
+/* The standing everyone agrees on right now: the order after the latest round (or the import). */
+function standing(l){ const rs = roundsOf(l.id); return rs.length ? orderMap(rs[rs.length-1].order) : baseMap(l); }
+/* Ranking; ties go to the higher total, then to whoever stood higher before. */
+function ranked(l, period = 'cur', tie){
+  tie = tie || (period === 'cur' ? standing(l) : new Map());
+  let arr = songsOf(l.id).map(s => ({ s, sc:score(s,l,period), t:total(s), p:tie.get(s.id) ?? 1e9 }));
+  if(period !== 'cur') arr = arr.filter(x => x.sc);
+  arr.sort((a,b) => b.sc-a.sc || b.t-a.t || a.p-b.p || a.s.title.localeCompare(b.s.title));
+  return arr.map(x => x.s);
+}
+/* Where each song stood before the latest change, and which songs have been in the top before. */
+function moveCtx(l, period){
+  const N = l.size || 100;
+  if(period !== 'cur'){
+    const prevYear = ranked(l, period-1), ever = new Set();
+    songsOf(l.id).forEach(s => { for(const y in s.pts) if(+y < period && +s.pts[y]) ever.add(s.id); });
+    return { prev: prevYear.length ? orderMap(prevYear.map(s=>s.id)) : new Map(), ever, N, any: prevYear.length > 0 };
+  }
+  const rs = roundsOf(l.id), ever = new Set();
+  if(l.base) for(const [k,v] of Object.entries(l.base)) if(v <= N) ever.add(k);
+  rs.forEach((r,i) => { r.prev.slice(0,N).forEach(id => ever.add(id)); if(i < rs.length-1) r.order.slice(0,N).forEach(id => ever.add(id)); });
+  const prev = rs.length ? orderMap(rs[rs.length-1].prev) : baseMap(l);
+  return { prev, ever, N, any: prev.size > 0 };
+}
+function moveOf(ctx, id, pos){
+  if(!ctx.any || pos > ctx.N) return '';
+  const p = ctx.prev.get(id);
+  if(p == null || p > ctx.N) return ctx.ever.has(id) ? '<span class="badge re">RE</span>' : '<span class="badge new">NEW</span>';
+  const d = p - pos;
+  return d > 0 ? '<span class="mv up">▲'+d+'</span>' : d < 0 ? '<span class="mv dn">▼'+(-d)+'</span>' : '<span class="mv eq">=</span>';
+}
+
+/* ================= UI state ================= */
+const ui = { view:'list', period:'cur', q:'', below:false };
+const ICON = {
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  logo:'<svg viewBox="0 0 32 32"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7a45"/><stop offset="1" stop-color="#e8312f"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg)"/><rect x="5.5" y="15" width="6" height="11" rx="1.6" fill="#fff" opacity=".85"/><rect x="13" y="8" width="6" height="18" rx="1.6" fill="#fff"/><rect x="20.5" y="18" width="6" height="8" rx="1.6" fill="#fff" opacity=".7"/></svg>'
+};
+
+function applyTheme(){
+  const t = data.settings.theme, root = document.documentElement;
+  if(t === 'dark' || t === 'light') root.setAttribute('data-theme', t); else root.removeAttribute('data-theme');
+  root.lang = lang() === 'en' ? 'en' : lang() === 'sr-Cyrl' ? 'sr-Cyrl' : 'sr-Latn';
+}
+
+/* ================= render ================= */
+function render(){
+  applyTheme();
+  const l = curList();
+  let h = '<header class="top"><div class="brand">'+ICON.logo+'<span>Top 100</span></div><button class="icon" data-a="settings" aria-label="'+esc(T('Podešavanja'))+'">'+ICON.gear+'</button></header>';
+  if(data.lists.length){
+    h += '<div class="chips">' + data.lists.map(x => '<button class="chip'+(l && x.id===l.id?' on':'')+'" data-a="pick" data-id="'+x.id+'">'+esc(x.name)+(data.draft && data.draft.list===x.id ? '<span class="dot"></span>' : '')+'</button>').join('')
+      + '<button class="chip add" data-a="newList">+ '+esc(T('Lista'))+'</button></div>';
+  }
+  let fab = '';
+  if(!l){
+    h += '<div class="empty"><h2>'+esc(T('Dobrodošli'))+'</h2><p>'+esc(T('Napravi listu ili uvezi svoju tabelu iz [[Excel]]-a.'))+'</p>'
+      + '<div class="stack mt" style="max-width:320px;margin:20px auto 0"><button class="btn primary" data-a="newList">'+ICON.plus+esc(T('Nova lista'))+'</button><button class="btn" data-a="import">'+esc(T('Uvezi iz [[Excel]]-a'))+'</button></div></div>';
+  } else if(data.draft && data.draft.list === l.id){
+    h += roundView(l);
+  } else {
+    const n = songsOf(l.id).length;
+    h += '<div class="lhead"><div><h1>'+esc(l.name)+'</h1><p>'+n+' '+esc(T('pesama'))+' · '+esc(T('top {0}', l.size))+' · '+esc(rankLabel(l))+'</p></div><button class="icon" data-a="listSettings">'+ICON.more+'</button></div>';
+    h += '<div class="seg">' + [['list','Lista'],['artists','Izvođači'],['history','Istorija']].map(([v,t]) => '<button class="'+(ui.view===v?'on':'')+'" data-a="view" data-v="'+v+'">'+esc(T(t))+'</button>').join('') + '</div>';
+    if(ui.view === 'history') h += historyView(l);
+    else {
+      const ys = yearsOf(l).reverse();
+      if(ui.period !== 'cur' && !ys.includes(ui.period)) ui.period = 'cur';
+      if(ys.length) h += '<div class="chips">' + [['cur',T('Aktuelna')], ...ys.map(y => [y, String(y)])].map(([v,t]) => '<button class="chip sm'+(ui.period===v?' on':'')+'" data-a="period" data-v="'+v+'">'+esc(t)+'</button>').join('') + '</div>';
+      if(ui.view === 'list'){
+        h += '<div class="search"><input id="q" type="search" placeholder="'+esc(T('Pretraga…'))+'" value="'+esc(ui.q)+'" autocomplete="off"><button class="icon" data-a="addSong" aria-label="'+esc(T('Dodaj pesmu'))+'">'+ICON.plus+'</button></div>';
+        h += '<div id="rows">'+listRows(l)+'</div>';
+      } else h += artistsView(l);
+    }
+    if(data.draft){
+      const dl = listById(data.draft.list);
+      fab = '<button class="fab" data-a="pick" data-id="'+data.draft.list+'">'+ICON.play+esc(T('Nastavi krug'))+(dl ? ' · '+esc(dl.name) : '')+'</button>';
+    } else if(n) fab = '<button class="fab" data-a="startRound">'+ICON.play+esc(T('Novi krug'))+'</button>';
+  }
+  $('app').innerHTML = h + fab;
+  if(data.draft && l && data.draft.list === l.id) updateRoundInfo();
+}
+
+function listRows(l){
+  const period = ui.period, all = ranked(l, period);
+  if(!all.length) return '<div class="empty">'+esc(T('Nema pesama.'))+'</div>';
+  const ctx = moveCtx(l, period), N = l.size || 100, q = norm(ui.q), cy = CY();
+  let rows = all.map((s,i) => ({ s, pos:i+1 }));
+  if(q) rows = rows.filter(r => norm(r.s.title+' '+r.s.artist).includes(q));
+  if(!rows.length) return '<div class="empty">'+esc(T('Ništa nije pronađeno.'))+'</div>';
+  const below = rows.filter(r => r.pos > N).length, showAll = q || ui.below;
+  let h = '<div class="rows">';
+  rows.forEach(r => {
+    if(r.pos > N && !showAll) return;
+    if(r.pos === N+1 && !q) h += '<button class="cut" data-a="below">— '+esc(T('Sakrij ispod crte'))+' —</button>';
+    const s = r.s, sc = score(s, l, period);
+    const small = period === 'cur' ? (+s.pts[cy] ? cy+': '+fmt(s.pts[cy]) : '') : T('zbir')+' '+fmt(total(s));
+    h += '<div class="row'+(r.pos===1?' p1':'')+'" data-a="song" data-id="'+s.id+'"><div class="pos">'+r.pos+'</div><div class="mv">'+moveOf(ctx, s.id, r.pos)+'</div>'
+      + '<div class="main"><div class="t">'+esc(s.title)+(l.showPl && s.pl ? '<i class="pl"></i>' : '')+'</div><div class="a">'+esc(s.artist)+'</div></div>'
+      + '<div class="sc"><b>'+fmt(sc)+'</b><small>'+esc(small)+'</small></div></div>';
+  });
+  h += '</div>';
+  if(below && !showAll) h += '<button class="cut" style="border:0" data-a="below">'+esc(T('Prikaži još {0} ispod crte', below))+'</button>';
+  let note = '';
+  if(period !== 'cur') note = T('Lista po godini {0}. Kretanje je u odnosu na {1}.', period, period-1);
+  else if(roundsOf(l.id).length) note = T('Kretanje se računa od prethodnog kruga.');
+  else if(l.base && l.basePos) note = T('Pozicija je iz tabele, a kretanje se računa od nje.');
+  if(note) h += '<p class="note" style="text-align:center;margin-top:12px">'+esc(note)+'</p>';
+  return h;
+}
+
+function artistGroups(l, period){
+  const g = new Map();
+  songsOf(l.id).forEach(s => {
+    const k = norm(s.artist) || '?', sc = score(s, l, period);
+    if(!g.has(k)) g.set(k, { names:{}, songs:[], sc:0 });
+    const e = g.get(k); e.names[s.artist] = (e.names[s.artist]||0) + 1; e.songs.push(s); e.sc += sc;
+  });
+  return [...g.entries()].map(([k,e]) => ({ k, name:Object.entries(e.names).sort((a,b)=>b[1]-a[1])[0][0], songs:e.songs, sc:e.sc }))
+    .filter(e => e.sc || period === 'cur').sort((a,b) => b.sc-a.sc || b.songs.length-a.songs.length || a.name.localeCompare(b.name));
+}
+function artistsView(l){
+  const gs = artistGroups(l, ui.period);
+  if(!gs.length) return '<div class="empty">'+esc(T('Nema izvođača.'))+'</div>';
+  return '<div class="rows">' + gs.map((e,i) => '<div class="row" data-a="artist" data-k="'+esc(e.k)+'"><div class="pos">'+(i+1)+'</div><div></div><div class="main"><div class="t">'+esc(e.name||'—')+'</div><div class="a">'+e.songs.length+' '+esc(T('pesama'))+'</div></div><div class="sc"><b>'+fmt(e.sc)+'</b></div></div>').join('') + '</div>';
+}
+
+function historyView(l){
+  const rs = roundsOf(l.id).slice().reverse();
+  let h = '';
+  if(!rs.length) h += '<div class="empty">'+esc(T('Još nema krugova. Pokreni prvi krug dugmetom „Novi krug“.'))+'</div>';
+  rs.forEach((r, i) => {
+    const n = Object.keys(r.adds).length, sum = Object.values(r.adds).reduce((a,b) => a+b, 0), one = songById(r.order[0]);
+    h += '<div class="card hist" data-a="round" data-id="'+r.id+'"><div class="d"><b>'+esc(T('Krug'))+' '+(rs.length-i)+' · '+fdate(r.at)+'</b><span>'+r.year+'</span></div>'
+      + '<p>+'+fmt(sum)+' '+esc(T('poena'))+' · '+n+' '+esc(T('pesama'))+(one ? ' · #1 '+esc(one.title) : '')+'</p></div>';
+  });
+  if(l.base) h += '<div class="card"><h3>'+esc(T('Početno stanje (uvoz)'))+'</h3><p>'+(l.created ? fdate(l.created) : '')+'</p></div>';
+  return h;
+}
+
+/* ================= round ================= */
+function roundRowsOrder(l){
+  const d = data.draft, have = new Set(songsOf(l.id).map(s => s.id));
+  const ids = d.order.filter(id => have.has(id));
+  const inOrder = new Set(ids);
+  songsOf(l.id).forEach(s => { if(!inOrder.has(s.id)) ids.push(s.id); });
+  return ids;
+}
+function roundView(l){
+  const d = data.draft, N = l.size || 100, ids = roundRowsOrder(l), q = data.settings.quick, frozen = new Set(d.order);
+  let h = '<div class="rhead"><h1>'+esc(T('Krug u toku'))+' · '+esc(l.name)+'</h1><p>'+esc(T('poeni idu u godinu'))+' <button data-a="roundYear">'+d.year+'</button></p></div>';
+  h += '<div class="search"><input id="rq" type="search" placeholder="'+esc(T('Pretraga…'))+'" autocomplete="off"><button class="icon" data-a="addSong" aria-label="'+esc(T('Dodaj pesmu'))+'">'+ICON.plus+'</button></div>';
+  h += '<div class="rows" id="rrows">';
+  ids.forEach((id, i) => {
+    const s = songById(id), v = d.adds[id], pos = i+1;
+    if(pos === N+1) h += '<button class="cut" data-a="below" id="rcut">'+esc(ui.below ? T('Sakrij ispod crte') : T('Prikaži još {0} ispod crte', ids.length-N))+'</button>';
+    h += '<div class="rrow'+(v ? ' on' : '')+(pos > N && frozen.has(id) && !ui.below ? ' hide' : '')+(pos > N && frozen.has(id) ? ' bl' : '')+'" data-id="'+id+'" data-s="'+esc(norm(s.title+' '+s.artist))+'"><div class="pos">'+pos+'</div>'
+      + '<div class="t">'+esc(s.title)+'</div><div class="a">'+esc(s.artist)+' · <span>'+fmt(score(s,l,'cur'))+'</span></div>'
+      + '<div class="ctl"><button class="mi" data-a="minus">−</button><input class="cnt" type="number" inputmode="decimal" value="'+(v ? fmt(v).replace(',','.') : '')+'" placeholder="0">'
+      + q.map(x => '<button data-a="plus" data-v="'+x+'">+'+fmt(x)+'</button>').join('') + '</div></div>';
+  });
+  h += '</div>';
+  h += '<div class="rbar"><div class="in"><div class="info" id="rinfo"></div><button class="icon" data-a="roundMenu">'+ICON.more+'</button><button class="btn primary" data-a="finish">'+ICON.check+esc(T('Završio sam'))+'</button></div></div>';
+  return h;
+}
+function updateRoundInfo(){
+  const el = $('rinfo'); if(!el || !data.draft) return;
+  const v = Object.values(data.draft.adds).filter(x => x), sum = v.reduce((a,b) => a+b, 0);
+  el.innerHTML = '<b>'+v.length+'</b> '+esc(T('pesama dobilo poene'))+'<br><b>+'+fmt(sum)+'</b> '+esc(T('poena'));
+}
+function setAdd(id, val, rowEl, fromInput){
+  const d = data.draft; if(!d) return;
+  val = Math.round((+val || 0) * 100) / 100;
+  if(val) d.adds[id] = val; else delete d.adds[id];
+  save();
+  if(rowEl){
+    rowEl.classList.toggle('on', !!val);
+    if(!fromInput) rowEl.querySelector('.cnt').value = val ? String(val) : '';
+  }
+  updateRoundInfo();
+}
+function startRound(){
+  const l = curList(); if(!l) return;
+  if(data.draft && data.draft.list !== l.id){ data.cur = data.draft.list; save(); render(); return; }
+  data.draft = { list:l.id, year:CY(), at:new Date().toISOString(), adds:{}, order:ranked(l).map(s => s.id) };
+  ui.below = false; save(); render(); window.scrollTo(0,0);
+}
+async function finishRound(){
+  const d = data.draft, l = listById(d.list); if(!l){ data.draft = null; save(); render(); return; }
+  const adds = {}; for(const [k,v] of Object.entries(d.adds)) if(v && songById(k)) adds[k] = v;
+  if(!Object.keys(adds).length){
+    if(!await confirmSheet(T('Završiti krug bez poena?'), T('Odbaci krug'))) return;
+    data.draft = null; save(); render(); return;
+  }
+  const prev = ranked(l).map(s => s.id);
+  for(const [id,v] of Object.entries(adds)){ const s = songById(id); s.pts[d.year] = Math.round(((+s.pts[d.year]||0) + v) * 100) / 100; if(!s.pts[d.year]) delete s.pts[d.year]; }
+  const order = ranked(l, 'cur', orderMap(prev)).map(s => s.id);
+  const r = { id:uid(), list:l.id, at:new Date().toISOString(), year:d.year, adds, prev, order };
+  data.rounds.push(r); data.draft = null; ui.below = false;
+  save(); render(); window.scrollTo(0,0);
+  showRound(r, true);
+}
+function undoRound(r){
+  const l = listById(r.list);
+  for(const [id,v] of Object.entries(r.adds)){ const s = songById(id); if(!s) continue; s.pts[r.year] = Math.round(((+s.pts[r.year]||0) - v) * 100) / 100; if(!s.pts[r.year]) delete s.pts[r.year]; }
+  data.rounds = data.rounds.filter(x => x !== r);
+  save(); closeSheet(); render(); toast(T('Krug je poništen'));
+}
+function showRound(r, fresh){
+  const l = listById(r.list), N = l.size || 100, rs = roundsOf(l.id), idx = rs.indexOf(r);
+  const pm = orderMap(r.prev), om = orderMap(r.order), ever = new Set();
+  if(l.base) for(const [k,v] of Object.entries(l.base)) if(v <= N) ever.add(k);
+  rs.slice(0, idx).forEach(x => { x.prev.slice(0,N).forEach(id => ever.add(id)); x.order.slice(0,N).forEach(id => ever.add(id)); });
+  const live = id => songById(id);
+  const name = id => { const s = live(id); return s ? '<span class="x">'+esc(s.title)+' <small>'+esc(s.artist)+'</small></span>' : ''; };
+  const ins = r.order.slice(0,N).filter(id => live(id) && !((pm.get(id)||1e9) <= N));
+  const outs = r.prev.slice(0,N).filter(id => live(id) && (om.get(id)||1e9) > N);
+  const moves = r.order.slice(0,N).filter(id => live(id) && (pm.get(id)||1e9) <= N).map(id => ({ id, d:pm.get(id) - om.get(id) }));
+  const ups = moves.filter(m => m.d > 0).sort((a,b) => b.d-a.d).slice(0,5), dns = moves.filter(m => m.d < 0).sort((a,b) => a.d-b.d).slice(0,5);
+  const sum = Object.values(r.adds).reduce((a,b) => a+b, 0), one = live(r.order[0]);
+  let h = '<h2>'+esc(fresh ? T('Nova lista je spremna') : T('Krug')+' '+(idx+1))+'</h2><p class="sub">'+fdate(r.at)+' · '+r.year+' · +'+fmt(sum)+' '+esc(T('poena'))+' · '+Object.keys(r.adds).length+' '+esc(T('pesama'))+'</p>';
+  if(one) h += '<div class="hero"><small>'+esc(r.prev[0] === r.order[0] ? T('Broj 1 i dalje') : T('Novi broj 1'))+'</small><b>'+esc(one.title)+'</b><span>'+esc(one.artist)+'</span></div>';
+  const li = (arr, fn) => '<ul class="mini">'+arr.map(fn).join('')+'</ul>';
+  if(ins.length) h += '<h4>'+esc(T('Ušle u top {0}', N))+'</h4>' + li(ins, id => '<li><span class="n">'+om.get(id)+'</span>'+name(id)+'<span class="r">'+(ever.has(id) ? '<span class="badge re">RE</span>' : '<span class="badge new">NEW</span>')+'</span></li>');
+  if(ups.length) h += '<h4>'+esc(T('Najveći skokovi'))+'</h4>' + li(ups, m => '<li><span class="n">'+om.get(m.id)+'</span>'+name(m.id)+'<span class="r mv up">▲'+m.d+'</span></li>');
+  if(dns.length) h += '<h4>'+esc(T('Najveći padovi'))+'</h4>' + li(dns, m => '<li><span class="n">'+om.get(m.id)+'</span>'+name(m.id)+'<span class="r mv dn">▼'+(-m.d)+'</span></li>');
+  if(outs.length) h += '<h4>'+esc(T('Ispale iz top {0}', N))+'</h4>' + li(outs, id => '<li><span class="n">'+pm.get(id)+'</span>'+name(id)+'<span class="r mv dn">↓'+om.get(id)+'</span></li>');
+  const addIds = Object.keys(r.adds).filter(live).sort((a,b) => r.adds[b]-r.adds[a]);
+  if(addIds.length) h += '<h4>'+esc(T('Poeni'))+'</h4>' + li(addIds, id => '<li><span class="n">'+om.get(id)+'</span>'+name(id)+'<span class="r">+'+fmt(r.adds[id])+'</span></li>');
+  h += '<div class="stack mt"><button class="btn primary block" data-a="close">'+esc(T('U redu'))+'</button>';
+  if(idx === rs.length-1) h += '<button class="btn danger block" data-a="undoRound" data-id="'+r.id+'">'+esc(T('Poništi ovaj krug'))+'</button>';
+  h += '</div>';
+  openSheet(h);
+}
+
+/* ================= sheets ================= */
+function openSheet(html, mount){
+  const r = $('sheetRoot');
+  r.innerHTML = '<div class="scrim" data-a="close"></div><div class="sheet"><div class="grip"></div>'+html+'</div>';
+  r.classList.add('open'); document.body.classList.add('noscroll');
+  if(mount) mount(r.querySelector('.sheet'));
+}
+function closeSheet(){
+  const r = $('sheetRoot'); if(!r.classList.contains('open')) return;
+  r.classList.remove('open'); r.innerHTML = ''; document.body.classList.remove('noscroll');
+}
+/* Android back button (see MainActivity): true when the page handled it. */
+window.t100Back = () => {
+  if($('sheetRoot').classList.contains('open')){ closeSheet(); return true; }
+  if(!data.draft && ui.view !== 'list'){ ui.view = 'list'; render(); return true; }
+  if(!data.draft && ui.period !== 'cur'){ ui.period = 'cur'; render(); return true; }
+  return false;
+};
+function confirmSheet(msg, ok, danger = true){
+  return new Promise(res => {
+    let done = false;
+    openSheet('<h2 style="margin-bottom:16px;line-height:1.35">'+esc(msg)+'</h2><div class="two"><button class="btn" id="cNo">'+esc(T('Otkaži'))+'</button><button class="btn '+(danger?'danger':'primary')+'" id="cYes">'+esc(ok)+'</button></div>', el => {
+      el.querySelector('#cYes').onclick = () => { done = true; closeSheet(); res(true); };
+      el.querySelector('#cNo').onclick = () => { done = true; closeSheet(); res(false); };
+    });
+    const r = $('sheetRoot'), obs = new MutationObserver(() => { if(!r.classList.contains('open')){ obs.disconnect(); if(!done) res(false); } });
+    obs.observe(r, { attributes:true });
+  });
+}
+let toastT;
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2400); }
+
+/* ================= songs ================= */
+function openAddSong(){
+  const l = curList(); if(!l) return;
+  const inRound = data.draft && data.draft.list === l.id, y = inRound ? data.draft.year : CY();
+  openSheet('<h2>'+esc(T('Nova pesma'))+'</h2><p class="sub">'+esc(l.name)+'</p>'
+    + '<label class="lbl">'+esc(T('Naziv'))+'</label><input class="field" id="sT" autocomplete="off">'
+    + '<label class="lbl">'+esc(T('Izvođač'))+'</label><input class="field" id="sA" autocomplete="off" list="artistList"><datalist id="artistList">'
+    + [...new Set(songsOf(l.id).map(s => s.artist).filter(Boolean))].sort().map(a => '<option value="'+esc(a)+'">').join('') + '</datalist>'
+    + '<label class="lbl">'+esc(T('Poeni za {0}', y))+(inRound ? ' ('+esc(T('U krugu'))+')' : '')+'</label><input class="field" id="sP" type="number" inputmode="decimal" placeholder="0">'
+    + (l.showPl ? '<label class="check"><input type="checkbox" id="sPl">'+esc(T('U plejlisti'))+'</label>' : '')
+    + '<p class="warn hide" id="sW"></p><div class="two mt"><button class="btn" data-a="close">'+esc(T('Otkaži'))+'</button><button class="btn primary" id="sOk">'+esc(T('Dodaj'))+'</button></div>', el => {
+    el.querySelector('#sT').focus();
+    const check = () => {
+      const k = norm(el.querySelector('#sT').value) + '|' + norm(el.querySelector('#sA').value), w = el.querySelector('#sW');
+      const dup = songsOf(l.id).some(s => songKey(s) === k);
+      w.textContent = T('Pesma već postoji u ovoj listi.'); w.classList.toggle('hide', !dup);
+    };
+    el.querySelector('#sT').oninput = check; el.querySelector('#sA').oninput = check;
+    el.querySelector('#sOk').onclick = () => {
+      const title = el.querySelector('#sT').value.trim(), artist = el.querySelector('#sA').value.trim(), p = +el.querySelector('#sP').value || 0;
+      if(!title){ toast(T('Unesi naziv pesme.')); return; }
+      const s = { id:uid(), list:l.id, title, artist, pts:{}, pl:!!(el.querySelector('#sPl')||{}).checked, added:new Date().toISOString() };
+      data.songs.push(s);
+      if(inRound){ if(p) data.draft.adds[s.id] = p; }
+      else if(p) s.pts[y] = p;
+      save(); closeSheet(); render();
+      const row = document.querySelector('[data-id="'+s.id+'"]'); if(row) row.scrollIntoView({ block:'center' });
+    };
+  });
+}
+function posChart(pts, N){
+  if(pts.length < 2) return '';
+  const W = 320, H = 150, pl = 30, pr = 10, pt = 12, pb = 22;
+  const maxP = Math.max(...pts.map(p => p.p), Math.min(N, 10));
+  const x = i => pl + (W-pl-pr) * i / (pts.length-1), y = p => pt + (H-pt-pb) * (p-1) / Math.max(1, maxP-1);
+  const line = pts.map((p,i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.p).toFixed(1)).join(' ');
+  const cutY = N < maxP ? '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(N+.5)+'" y2="'+y(N+.5)+'" stroke="var(--muted)" stroke-dasharray="3 4" opacity=".6"/>' : '';
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'"><text x="4" y="'+(y(1)+4)+'" font-size="10" font-weight="700" fill="var(--muted)">#1</text><text x="4" y="'+(y(maxP)+4)+'" font-size="10" font-weight="700" fill="var(--muted)">#'+maxP+'</text>'
+    + cutY + '<path d="'+line+'" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>'
+    + pts.map((p,i) => '<circle cx="'+x(i)+'" cy="'+y(p.p)+'" r="'+(pts.length > 40 ? 1.8 : 3)+'" fill="var(--accent)"/>').join('')
+    + '<text x="'+pl+'" y="'+(H-6)+'" font-size="10" font-weight="700" fill="var(--muted)">'+esc(pts[0].label)+'</text><text x="'+(W-pr)+'" y="'+(H-6)+'" text-anchor="end" font-size="10" font-weight="700" fill="var(--muted)">'+esc(pts[pts.length-1].label)+'</text></svg>';
+}
+function barChart(s, years){
+  const vals = years.map(y => +s.pts[y] || 0); if(!vals.some(v => v)) return '';
+  const W = 320, H = 130, pb = 18, pt = 14, max = Math.max(...vals), bw = (W-8) / years.length;
+  return '<svg class="chart" viewBox="0 0 '+W+' '+H+'">' + years.map((y,i) => {
+    const v = vals[i], h = max ? (H-pt-pb) * v / max : 0, x = 4 + i*bw;
+    return '<rect x="'+(x+bw*.18)+'" y="'+(H-pb-h)+'" width="'+(bw*.64)+'" height="'+Math.max(h, v?2:0)+'" rx="3" fill="var(--accent)" opacity="'+(y===CY()?1:.7)+'"/>'
+      + (v ? '<text x="'+(x+bw/2)+'" y="'+(H-pb-h-3)+'" text-anchor="middle" font-size="9" font-weight="800" fill="var(--text)">'+fmt(v)+'</text>' : '')
+      + (years.length <= 12 || i % 2 === 0 ? '<text x="'+(x+bw/2)+'" y="'+(H-5)+'" text-anchor="middle" font-size="9" font-weight="700" fill="var(--muted)">\''+String(y).slice(2)+'</text>' : '');
+  }).join('') + '</svg>';
+}
+function openSong(id){
+  const s = songById(id), l = listById(s.list); if(!s || !l) return;
+  const N = l.size || 100, cur = ranked(l).findIndex(x => x.id === id) + 1;
+  const pts = []; let peak = cur, ones = 0, inTop = 0;
+  if(l.base && l.base[id]){ pts.push({ p:+l.base[id], label:T('Uvoz') }); peak = Math.min(peak, +l.base[id]); }
+  roundsOf(l.id).forEach(r => { const i = r.order.indexOf(id); if(i < 0) return; const p = i+1; pts.push({ p, label:fdate(r.at) }); peak = Math.min(peak, p); if(p === 1) ones++; if(p <= N) inTop++; });
+  const rs = roundsOf(l.id);
+  const years = yearsOf(l, true);
+  let h = '<h2>'+esc(s.title)+'</h2><p class="sub">'+esc(s.artist)+' · '+esc(l.name)+'</p>'
+    + '<div class="tiles"><div class="tile"><b>#'+cur+'</b><span>'+esc(T('Pozicija'))+'</span></div><div class="tile"><b>#'+peak+'</b><span>'+esc(T('Najviša'))+'</span></div><div class="tile"><b>'+fmt(total(s))+'</b><span>'+esc(T('Ukupno'))+'</span></div></div>'
+    + (rs.length ? '<div class="tiles"><div class="tile"><b>'+ones+'</b><span>'+esc(T('Na #1'))+' ('+esc(T('krugova'))+')</span></div><div class="tile"><b>'+inTop+'</b><span>'+esc(T('U top {0}', N))+'</span></div><div class="tile"><b>'+fmt(+s.pts[CY()]||0)+'</b><span>'+CY()+'</span></div></div>' : '');
+  const pc = posChart(pts, N);
+  if(pc) h += '<h4>'+esc(T('Kretanje kroz krugove'))+'</h4>'+pc;
+  const bc = barChart(s, years);
+  if(bc) h += '<h4>'+esc(T('Poeni po godinama'))+'</h4>'+bc;
+  h += '<h4>'+esc(T('Izmeni'))+'</h4><label class="lbl">'+esc(T('Naziv'))+'</label><input class="field" id="eT" value="'+esc(s.title)+'"><label class="lbl">'+esc(T('Izvođač'))+'</label><input class="field" id="eA" value="'+esc(s.artist)+'">'
+    + (l.showPl ? '<label class="check"><input type="checkbox" id="ePl"'+(s.pl?' checked':'')+'>'+esc(T('U plejlisti'))+'</label>' : '')
+    + '<label class="lbl">'+esc(T('Poeni po godinama'))+'</label><div class="years">' + years.slice().reverse().map(y => '<label><span>'+y+'</span><input type="number" inputmode="decimal" data-y="'+y+'" value="'+(s.pts[y] != null ? s.pts[y] : '')+'" placeholder="0"></label>').join('') + '</div>'
+    + (data.lists.length > 1 ? '<label class="lbl">'+esc(T('Premesti u listu'))+'</label><select class="field" id="eL">'+data.lists.map(x => '<option value="'+x.id+'"'+(x.id===l.id?' selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select>' : '')
+    + '<div class="two mt"><button class="btn danger" id="eDel">'+esc(T('Obriši'))+'</button><button class="btn primary" id="eOk">'+esc(T('Sačuvaj'))+'</button></div>';
+  openSheet(h, el => {
+    el.querySelector('#eOk').onclick = () => {
+      const t = el.querySelector('#eT').value.trim(); if(!t){ toast(T('Unesi naziv pesme.')); return; }
+      s.title = t; s.artist = el.querySelector('#eA').value.trim();
+      const pl = el.querySelector('#ePl'); if(pl) s.pl = pl.checked;
+      el.querySelectorAll('[data-y]').forEach(inp => { const v = inp.value.trim(); if(v === '' || !+v) delete s.pts[inp.dataset.y]; else s.pts[inp.dataset.y] = +v; });
+      const nl = el.querySelector('#eL'); let moved = false;
+      if(nl && nl.value !== s.list){ s.list = nl.value; moved = true; if(data.draft) delete data.draft.adds[s.id]; }
+      save(); closeSheet(); render(); toast(T(moved ? 'Premešteno' : 'Sačuvano'));
+    };
+    el.querySelector('#eDel').onclick = async () => {
+      if(!await confirmSheet(T('Obrisati pesmu „{0}“?', s.title), T('Obriši'))) return;
+      data.songs = data.songs.filter(x => x !== s);
+      if(data.draft) delete data.draft.adds[s.id];
+      save(); render(); toast(T('Pesma je obrisana'));
+    };
+  });
+}
+function openArtist(k){
+  const l = curList(), e = artistGroups(l, 'cur').find(x => x.k === k); if(!e) return;
+  const pos = orderMap(ranked(l).map(s => s.id));
+  const songs = e.songs.slice().sort((a,b) => pos.get(a.id) - pos.get(b.id));
+  openSheet('<h2>'+esc(e.name)+'</h2><p class="sub">'+esc(T('Pesme izvođača'))+' · '+fmt(e.sc)+' '+esc(T('poena'))+'</p><ul class="mini">'
+    + songs.map(s => '<li data-a="song" data-id="'+s.id+'" style="cursor:pointer"><span class="n">'+pos.get(s.id)+'</span><span class="x">'+esc(s.title)+'</span><span class="r">'+fmt(score(s,l,'cur'))+'</span></li>').join('') + '</ul>'
+    + '<button class="btn block mt" data-a="close">'+esc(T('Zatvori'))+'</button>');
+}
+
+/* ================= lists & settings ================= */
+function newListSheet(){
+  openSheet('<h2>'+esc(T('Nova lista'))+'</h2><label class="lbl">'+esc(T('Naziv liste'))+'</label><input class="field" id="nN" placeholder="World 100">'
+    + '<label class="lbl">'+esc(T('Koliko mesta prikazuje'))+'</label><input class="field" id="nS" type="number" inputmode="numeric" value="100">'
+    + '<div class="two mt"><button class="btn" data-a="close">'+esc(T('Otkaži'))+'</button><button class="btn primary" id="nOk">'+esc(T('Napravi'))+'</button></div>'
+    + '<button class="btn block mt" data-a="import">'+esc(T('Uvezi iz [[Excel]]-a'))+'</button>', el => {
+    el.querySelector('#nN').focus();
+    el.querySelector('#nOk').onclick = () => {
+      const name = el.querySelector('#nN').value.trim(); if(!name){ toast(T('Unesi naziv liste.')); return; }
+      const l = makeList(name); l.size = Math.max(1, Math.round(+el.querySelector('#nS').value || 100));
+      data.cur = l.id; ui.view = 'list'; ui.period = 'cur'; save(); closeSheet(); render();
+    };
+  });
+}
+function makeList(name){ const l = { id:uid(), name, size:100, rank:'total', lastN:3, showPl:true, base:null, created:new Date().toISOString() }; data.lists.push(l); return l; }
+function listSettings(){
+  const l = curList(); if(!l) return;
+  openSheet('<h2>'+esc(T('Podešavanja liste'))+'</h2><p class="sub">'+esc(l.name)+'</p>'
+    + '<label class="lbl">'+esc(T('Naziv liste'))+'</label><input class="field" id="lN" value="'+esc(l.name)+'">'
+    + '<label class="lbl">'+esc(T('Koliko mesta prikazuje'))+'</label><input class="field" id="lS" type="number" inputmode="numeric" value="'+l.size+'">'
+    + '<label class="lbl">'+esc(T('Rangiraj po'))+'</label><select class="field" id="lR">' + [['total','Zbiru svih godina'],['year','Samo tekućoj godini'],['last','Poslednjih N godina']].map(([v,t]) => '<option value="'+v+'"'+(l.rank===v?' selected':'')+'>'+esc(T(t))+'</option>').join('') + '</select>'
+    + '<div id="lNw"'+(l.rank==='last'?'':' class="hide"')+'><label class="lbl">'+esc(T('Broj godina'))+'</label><input class="field" id="lY" type="number" inputmode="numeric" value="'+(l.lastN||3)+'"></div>'
+    + '<label class="check"><input type="checkbox" id="lP"'+(l.showPl?' checked':'')+'>'+esc(T('Prikaži kolonu plejliste'))+'</label>'
+    + '<div class="two mt"><button class="btn" data-a="close">'+esc(T('Otkaži'))+'</button><button class="btn primary" id="lOk">'+esc(T('Sačuvaj'))+'</button></div>'
+    + '<div class="stack mt"><button class="btn block" id="lX">'+esc(T('Izvezi u [[Excel]]'))+'</button><button class="btn danger block" id="lDel">'+esc(T('Obriši listu'))+'</button></div>', el => {
+    el.querySelector('#lR').onchange = e => el.querySelector('#lNw').classList.toggle('hide', e.target.value !== 'last');
+    el.querySelector('#lOk').onclick = () => {
+      const name = el.querySelector('#lN').value.trim(); if(!name){ toast(T('Unesi naziv liste.')); return; }
+      l.name = name; l.size = Math.max(1, Math.round(+el.querySelector('#lS').value || 100));
+      l.rank = el.querySelector('#lR').value; l.lastN = Math.max(1, Math.round(+el.querySelector('#lY').value || 3)); l.showPl = el.querySelector('#lP').checked;
+      save(); closeSheet(); render(); toast(T('Sačuvano'));
+    };
+    el.querySelector('#lX').onclick = () => exportXlsx([l]);
+    el.querySelector('#lDel').onclick = async () => {
+      if(!await confirmSheet(T('Obrisati listu „{0}“ sa svim pesmama i istorijom?', l.name), T('Obriši'))) return;
+      data.lists = data.lists.filter(x => x !== l); data.songs = data.songs.filter(s => s.list !== l.id); data.rounds = data.rounds.filter(r => r.list !== l.id);
+      if(data.draft && data.draft.list === l.id) data.draft = null;
+      data.cur = data.lists[0] ? data.lists[0].id : null; save(); render(); toast(T('Lista je obrisana'));
+    };
+  });
+}
+function openSettings(){
+  const s = data.settings, ver = window.Top100Android && Top100Android.getVersion ? Top100Android.getVersion() : '';
+  const chips = (key, opts) => '<div class="chips" style="flex-wrap:wrap">' + opts.map(([v,t]) => '<button class="chip sm'+((s[key]||(key==='lang'?lang():'auto'))===v?' on':'')+'" data-a="set" data-k="'+key+'" data-v="'+v+'">'+esc(t)+'</button>').join('') + '</div>';
+  openSheet('<h2>'+esc(T('Podešavanja'))+'</h2>'
+    + '<h4>'+esc(T('Jezik'))+'</h4>' + chips('lang', [['sr-Cyrl','Српски'],['sr','Srpski'],['en','English']])
+    + '<h4>'+esc(T('Tema'))+'</h4>' + chips('theme', [['auto',T('Automatski')],['dark',T('Tamna')],['light',T('Svetla')]])
+    + '<h4>'+esc(T('Brza dugmad'))+'</h4><input class="field" id="qB" value="'+esc(s.quick.join(', '))+'" inputmode="decimal"><p class="note" style="margin-top:6px">'+esc(T('Brojevi odvojeni zarezom, npr. 1, 2, 5'))+'</p>'
+    + '<h4>'+esc(T('Podaci'))+'</h4><div class="stack"><button class="btn block" data-a="import">'+esc(T('Uvezi iz [[Excel]]-a ili [[CSV]]-a'))+'</button>'
+    + (data.lists.length ? '<button class="btn block" data-a="exportAll">'+esc(T('Izvezi u [[Excel]]'))+'</button>' : '')
+    + '<button class="btn block" data-a="backup">'+esc(T('Napravi rezervnu kopiju'))+'</button><button class="btn block" data-a="restore">'+esc(T('Vrati iz rezervne kopije'))+'</button></div>'
+    + '<p class="note" style="margin-top:10px">'+esc(T('Podaci se čuvaju samo na ovom uređaju. Povremeno napravi rezervnu kopiju.'))+'</p>'
+    + (ver ? '<h4>'+esc(T('Verzija'))+'</h4><p class="note">Top 100 '+esc(ver)+'</p><button class="btn block mt" data-a="update">'+esc(T('Proveri ažuriranja'))+'</button>' : '')
+    + '<button class="btn primary block mt" data-a="close">'+esc(T('Zatvori'))+'</button>', el => {
+    el.querySelector('#qB').onchange = e => {
+      const q = e.target.value.split(/[,;\s]+/).map(x => +x.replace(',','.')).filter(x => x > 0).slice(0,4);
+      data.settings.quick = q.length ? q : [1,2,5]; save();
+    };
+  });
+}
+
+/* ================= import ================= */
+async function unzipEntries(buf){
+  const u = new Uint8Array(buf), dv = new DataView(buf), dec = new TextDecoder();
+  let eocd = -1;
+  for(let i = u.length-22; i >= Math.max(0, u.length-65557); i--){ if(dv.getUint32(i,true) === 0x06054b50){ eocd = i; break; } }
+  if(eocd < 0) throw new Error('zip');
+  const total = dv.getUint16(eocd+10,true); let p = dv.getUint32(eocd+16,true); const out = {};
+  for(let k = 0; k < total; k++){
+    if(dv.getUint32(p,true) !== 0x02014b50) break;
+    const method = dv.getUint16(p+10,true), csize = dv.getUint32(p+20,true), nlen = dv.getUint16(p+28,true), elen = dv.getUint16(p+30,true), clen = dv.getUint16(p+32,true), lho = dv.getUint32(p+42,true);
+    out[dec.decode(u.subarray(p+46, p+46+nlen))] = { method, csize, lho };
+    p += 46+nlen+elen+clen;
+  }
+  async function get(name){
+    const e = out[name]; if(!e) return null;
+    const start = e.lho+30+dv.getUint16(e.lho+26,true)+dv.getUint16(e.lho+28,true), raw = u.subarray(start, start+e.csize);
+    if(e.method === 0) return dec.decode(raw);
+    if(e.method === 8){
+      if(typeof DecompressionStream === 'undefined') throw new Error('nodecomp');
+      const st = new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+      return dec.decode(await new Response(st).arrayBuffer());
+    }
+    return null;
+  }
+  return { names:Object.keys(out), get };
+}
+const tags = (node, name) => [...node.getElementsByTagNameNS('*', name)];
+const attrEnd = (node, suffix) => { for(const a of node.attributes) if(a.name === suffix || a.name.endsWith(':'+suffix)) return a.value; return null; };
+function colIndex(ref){ const m = /^([A-Z]+)/.exec(ref||''); if(!m) return -1; let n = 0; for(const c of m[1]) n = n*26 + c.charCodeAt(0)-64; return n-1; }
+async function readXlsx(buf){
+  const z = await unzipEntries(buf), parse = t => new DOMParser().parseFromString(t, 'application/xml');
+  const shared = [], ss = await z.get('xl/sharedStrings.xml');
+  if(ss) tags(parse(ss), 'si').forEach(si => shared.push(tags(si, 't').map(t => t.textContent).join('')));
+  let sheets = [];
+  const wbx = await z.get('xl/workbook.xml'), relx = await z.get('xl/_rels/workbook.xml.rels');
+  if(wbx && relx){
+    const rel = {}; tags(parse(relx), 'Relationship').forEach(r => rel[r.getAttribute('Id')] = r.getAttribute('Target'));
+    sheets = tags(parse(wbx), 'sheet').map(sh => {
+      let t = rel[attrEnd(sh, 'id')] || ''; t = t.startsWith('/') ? t.slice(1) : 'xl/' + t.replace(/^\.\//,'');
+      return { name:sh.getAttribute('name') || 'Sheet', hidden:!!sh.getAttribute('state') && sh.getAttribute('state') !== 'visible', path:t };
+    }).filter(s => z.names.includes(s.path));
+  }
+  if(!sheets.length) sheets = z.names.filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort().map((p,i) => ({ name:'Sheet'+(i+1), hidden:false, path:p }));
+  if(!sheets.length) throw new Error('nosheet');
+  for(const sh of sheets){
+    const doc = parse(await z.get(sh.path)), rows = [];
+    tags(doc, 'row').forEach(r => {
+      const rn = +r.getAttribute('r') || rows.length + 1, cells = []; let seq = 0;
+      tags(r, 'c').forEach(c => {
+        let ci = colIndex(c.getAttribute('r')); if(ci < 0) ci = seq; seq = ci + 1;
+        const t = c.getAttribute('t'), v = tags(c, 'v')[0]; let val = '';
+        if(t === 's' && v) val = shared[+v.textContent] ?? '';
+        else if(t === 'inlineStr') val = tags(c, 't').map(x => x.textContent).join('');
+        else if(t === 'e') val = '';
+        else if(v) val = v.textContent;
+        cells[ci] = String(val).trim();
+      });
+      rows[rn-1] = Array.from(cells, x => x ?? '');
+    });
+    sh.rows = Array.from(rows, r => r || []);
+  }
+  return sheets;
+}
+function csvRows(text){
+  text = text.replace(/^﻿/, '');
+  const first = text.split(/\r?\n/).slice(0,5).join('\n'), cnt = c => first.split(c).length;
+  const delim = [['\t',cnt('\t')],[';',cnt(';')],[',',cnt(',')]].sort((a,b) => b[1]-a[1])[0][0];
+  const rows = []; let row = [], cell = '', q = false;
+  for(let i = 0; i < text.length; i++){
+    const c = text[i];
+    if(q){ if(c === '"'){ if(text[i+1] === '"'){ cell += '"'; i++; } else q = false; } else cell += c; continue; }
+    if(c === '"') q = true;
+    else if(c === delim){ row.push(cell.trim()); cell = ''; }
+    else if(c === '\n' || c === '\r'){ if(c === '\r' && text[i+1] === '\n') i++; row.push(cell.trim()); rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  if(cell || row.length){ row.push(cell.trim()); rows.push(row); }
+  return rows;
+}
+async function readTable(file){
+  const buf = await file.arrayBuffer(), u = new Uint8Array(buf);
+  if(u[0] === 0x50 && u[1] === 0x4b) return readXlsx(buf);
+  if(u[0] === 0xD0 && u[1] === 0xCF) throw new Error('xls');
+  let enc = 'utf-8'; if(u[0] === 0xFF && u[1] === 0xFE) enc = 'utf-16le'; else if(u[0] === 0xFE && u[1] === 0xFF) enc = 'utf-16be';
+  return [{ name:file.name.replace(/\.[^.]+$/, ''), hidden:false, rows:csvRows(new TextDecoder(enc).decode(buf)) }];
+}
+const numv = s => { s = String(s ?? '').trim().replace(/\s/g,''); if(!s) return null; if(/^-?\d+,\d+$/.test(s)) s = s.replace(',','.'); const n = Number(s); return isFinite(n) ? n : null; };
+const yearOf = h => { const m = /^((?:19|20)\d\d)(?:\.0*)?\.?$/.exec(String(h).trim()); return m ? +m[1] : null; };
+const RX = {
+  pos:/^(#|br|rb|r br|poz|pozicija|pozicije|mesto|mjesto|position|pos|rank|place|prethodna pozicija)$/,
+  title:/(pesm|pjesm|naziv|naslov|song|title|track|numer)/,
+  artist:/(grup|izvodj|izvod|artist|band|bend|autor|pevac|pjevac|performer|interpret)/,
+  total:/^(zbir|ukupno|total|sum|suma|svega|zbirno)$/,
+  pl:/(spotify|plejlist|playlist)/
+};
+const YES = /^(da|d|yes|y|x|✓|✔|✅|true|ok|1|\+)$/, NO = /^(ne|n|no|false|0|-|)$/;
+function analyze(rows){
+  const nonEmpty = r => r.filter(c => c !== '' && c != null).length;
+  let h = -1;
+  for(let i = 0; i < Math.min(rows.length, 15); i++){
+    const r = rows[i]; if(nonEmpty(r) < 2) continue;
+    if(r.some(c => yearOf(c) || Object.values(RX).some(rx => rx.test(norm(c))))){ h = i; break; }
+  }
+  const body = rows.slice(h + 1).filter(r => nonEmpty(r));
+  const ncol = Math.max(0, ...rows.slice(Math.max(h,0)).map(r => r.length));
+  const cols = [];
+  for(let c = 0; c < ncol; c++){
+    const head = h >= 0 ? String(rows[h][c] ?? '') : '', n = norm(head), vals = body.map(r => r[c] ?? '').filter(v => v !== '');
+    const col = { i:c, head, sample:vals.slice(0,3).join(' · '), role:'skip', year:yearOf(head) };
+    const numeric = vals.length && vals.filter(v => numv(v) != null).length >= vals.length * .8;
+    if(col.year) col.role = 'year';
+    else if(n && RX.pos.test(n)) col.role = 'pos';
+    else if(n && RX.total.test(n)) col.role = 'total';
+    else if(n && RX.pl.test(n)) col.role = 'pl';
+    else if(n && RX.title.test(n)) col.role = 'title';
+    else if(n && RX.artist.test(n)) col.role = 'artist';
+    else if(vals.length && vals.every(v => YES.test(norm(v)) || NO.test(norm(v))) && vals.some(v => YES.test(norm(v))) && !numeric) col.role = 'pl?';
+    else if(vals.length && !numeric && vals.some(v => /[a-zA-Zа-яА-Я]/.test(v))) col.role = 'text?';
+    cols.push(col);
+  }
+  const has = r => cols.some(c => c.role === r);
+  cols.forEach(c => {
+    if(c.role === 'pl?') c.role = has('pl') ? 'skip' : 'pl';
+    else if(c.role === 'text?') c.role = !has('title') ? 'title' : !has('artist') ? 'artist' : 'skip';
+  });
+  ['title','artist','pos','total','pl'].forEach(r => { let seen = false; cols.forEach(c => { if(c.role === r){ if(seen) c.role = 'skip'; seen = true; } }); });
+  return { h, body, cols };
+}
+function extract(an){
+  const by = r => an.cols.find(c => c.role === r), tc = by('title'), ac = by('artist'), pc = by('pos'), zc = by('total'), lc = by('pl');
+  const yc = an.cols.filter(c => c.role === 'year' && c.year);
+  if(!tc) return { recs:[], years:[], bad:[] };
+  const recs = [], bad = [], years = new Set();
+  an.body.forEach(r => {
+    const title = String(r[tc.i] ?? '').trim(); if(!title) return;
+    const pts = {}; let sum = 0;
+    yc.forEach(c => { const v = numv(r[c.i]); if(v){ pts[c.year] = (pts[c.year]||0) + v; sum += v; years.add(c.year); } });
+    const rec = { title, artist:ac ? String(r[ac.i] ?? '').trim() : '', pts, pos:pc ? numv(r[pc.i]) : null, pl:lc ? YES.test(norm(r[lc.i])) : null };
+    if(zc){ const z = numv(r[zc.i]); if(z != null && Math.abs(z - sum) > .001) bad.push({ rec, z, sum }); }
+    recs.push(rec);
+  });
+  return { recs, years:[...years].sort((a,b) => a-b), bad, hasPos:!!pc, hasTotal:!!zc, hasPl:!!lc };
+}
+function pickImportFile(){
+  const inp = $('fileIn'); inp.value = ''; inp.accept = '.xlsx,.xlsm,.csv,.tsv,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  inp.onchange = async () => {
+    const f = inp.files[0]; if(!f) return;
+    try{ openImport(await readTable(f)); }
+    catch(e){ toast(e.message === 'xls' ? T('Stari .xls nije podržan. Sačuvaj tabelu kao .xlsx.') : e.message === 'nodecomp' ? T('Ovaj uređaj ne može da otvori .xlsx. Sačuvaj kao [[CSV]].') : T('Ovaj fajl ne može da se pročita.')); }
+  };
+  inp.click();
+}
+function openImport(sheets){
+  const items = sheets.map(sh => {
+    const an = analyze(sh.rows), ex = extract(an), same = data.lists.find(l => norm(l.name) === norm(sh.name));
+    return { sh, an, ex, on:!sh.hidden && ex.recs.length > 0, name:sh.name, target:same ? same.id : 'new' };
+  });
+  const ROLES = [['skip','Preskoči'],['title','Pesma (naziv)'],['artist','Izvođač'],['pos','Prethodna pozicija'],['total','Zbir (samo provera)'],['pl','Plejlista (da/ne)']];
+  const card = (it, k) => {
+    const ex = it.ex;
+    let h = '<div class="imp'+(it.on?'':' off')+'" data-k="'+k+'"><div class="hd"><input type="checkbox" data-f="on"'+(it.on?' checked':'')+'><input class="field" data-f="name" value="'+esc(it.name)+'"></div>';
+    h += '<p class="prev">'+esc(T('{0} pesama', ex.recs.length))+' · '+esc(ex.years.length ? T('godine {0}', ex.years[0] + (ex.years.length > 1 ? '–' + ex.years[ex.years.length-1] : '')) : T('Nema godina'))+(it.sh.hidden ? ' · '+esc(T('Sakriven list')) : '')+'</p>';
+    if(!it.on && !ex.recs.length){ h += '<p class="warn">'+esc(T('Nema kolone sa nazivom pesme.'))+'</p>'; }
+    h += '<label class="lbl">'+esc(T('Uvezi u'))+'</label><select class="field" data-f="target"><option value="new">'+esc(T('nova lista'))+'</option>' + data.lists.map(l => '<option value="'+l.id+'"'+(it.target===l.id?' selected':'')+'>'+esc(T('spoji sa „{0}“', l.name))+'</option>').join('') + '</select>';
+    h += '<div class="cols mt">' + it.an.cols.filter(c => c.head || c.sample).map(c => '<div class="col'+(c.role==='skip'?' skip':'')+'"><div class="h">'+esc(c.head || '('+String.fromCharCode(65 + (c.i % 26))+')')+'</div><div class="v">'+esc(c.sample || '—')+'</div><select class="field" data-col="'+c.i+'">'
+      + (c.year ? '<option value="year"'+(c.role==='year'?' selected':'')+'>'+esc(T('Godina {0}', c.year))+'</option>' : '')
+      + ROLES.map(([v,t]) => '<option value="'+v+'"'+(c.role===v?' selected':'')+'>'+esc(T(t))+'</option>').join('') + '</select></div>').join('') + '</div>';
+    if(ex.hasTotal){
+      h += ex.bad.length ? '<div class="warn"><details><summary>'+esc(T('Zbir se ne slaže u {0} redova', ex.bad.length))+'</summary><ul>' + ex.bad.slice(0,30).map(b => '<li>'+esc(b.rec.title)+': '+esc(T('tabela kaže {0}, godine daju {1}', fmt(b.z), fmt(b.sum)))+'</li>').join('') + '</ul></details></div>'
+        : (ex.recs.length ? '<div class="ok">'+esc(T('Zbir se slaže u svim redovima'))+' ✓</div>' : '');
+    }
+    const top = ex.recs.map(r => ({ r, t:Object.values(r.pts).reduce((a,b) => a+b, 0) })).sort((a,b) => b.t-a.t).slice(0,3);
+    if(top.length) h += '<p class="prev">' + top.map((x,i) => (i+1)+'. <b>'+esc(x.r.title)+'</b> – '+esc(x.r.artist)+' ('+fmt(x.t)+')').join('<br>') + '</p>';
+    return h + '</div>';
+  };
+  const draw = el => { el.querySelector('#impList').innerHTML = items.map(card).join(''); };
+  openSheet('<h2>'+esc(T('Uvoz'))+'</h2><p class="sub">'+esc(T('Izaberi šta se uvozi. Kolone su prepoznate automatski, a možeš ih promeniti.'))+'</p><div id="impList"></div>'
+    + '<div class="two mt"><button class="btn" data-a="close">'+esc(T('Otkaži'))+'</button><button class="btn primary" id="impOk">'+esc(T('Uvezi'))+'</button></div>', el => {
+    draw(el);
+    el.querySelector('#impList').addEventListener('change', e => {
+      const box = e.target.closest('.imp'); if(!box) return;
+      const it = items[+box.dataset.k], f = e.target.dataset.f;
+      if(f === 'on') it.on = e.target.checked;
+      else if(f === 'target') it.target = e.target.value;
+      else if(e.target.dataset.col != null){
+        const c = it.an.cols[+e.target.dataset.col], role = e.target.value;
+        if(role !== 'skip' && role !== 'year') it.an.cols.forEach(o => { if(o !== c && o.role === role) o.role = 'skip'; });
+        c.role = role; it.ex = extract(it.an);
+      }
+      else return;
+      const k = +box.dataset.k, tmp = document.createElement('div'); tmp.innerHTML = card(it, k); box.replaceWith(tmp.firstChild);
+    });
+    el.querySelector('#impList').addEventListener('input', e => { if(e.target.dataset.f === 'name'){ items[+e.target.closest('.imp').dataset.k].name = e.target.value; } });
+    el.querySelector('#impOk').onclick = () => {
+      const chosen = items.filter(it => it.on && it.ex.recs.length);
+      if(!chosen.length){ toast(T('Ništa nije izabrano.')); return; }
+      let n = 0, first = null;
+      chosen.forEach(it => { const l = applyImport(it); n += it.ex.recs.length; first = first || l; });
+      data.cur = first.id; ui.view = 'list'; ui.period = 'cur'; ui.q = '';
+      save(); closeSheet(); render(); toast(T('Uvezeno: {0} pesama u {1} lista', n, chosen.length));
+    };
+  });
+}
+function applyImport(it){
+  const ex = it.ex;
+  if(it.target === 'new'){
+    const l = makeList(it.name.trim() || it.sh.name);
+    if(!ex.hasPl) l.showPl = false;
+    const base = {};
+    ex.recs.forEach(r => {
+      const s = { id:uid(), list:l.id, title:r.title, artist:r.artist, pts:r.pts, pl:!!r.pl, added:new Date().toISOString() };
+      data.songs.push(s);
+      if(r.pos != null && r.pos > 0) base[s.id] = Math.round(r.pos);
+    });
+    if(Object.keys(base).length){ l.base = base; l.basePos = true; }
+    else l.base = Object.fromEntries(ranked(l, 'cur', new Map()).map((s,i) => [s.id, i+1]));
+    return l;
+  }
+  const l = listById(it.target), idx = new Map(songsOf(l.id).map(s => [songKey(s), s]));
+  ex.recs.forEach(r => {
+    const s = idx.get(songKey(r));
+    if(s){ Object.assign(s.pts, r.pts); if(r.pl != null) s.pl = r.pl; }
+    else data.songs.push({ id:uid(), list:l.id, title:r.title, artist:r.artist, pts:r.pts, pl:!!r.pl, added:new Date().toISOString() });
+  });
+  return l;
+}
+
+/* ================= export ================= */
+const CRC = (() => { const t = new Uint32Array(256); for(let n = 0; n < 256; n++){ let c = n; for(let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u){ let c = 0xFFFFFFFF; for(let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+/* Minimal ZIP writer (stored, no compression): enough for a valid .xlsx. */
+function zip(files){
+  const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
+  files.forEach(f => {
+    const name = enc.encode(f.name), body = enc.encode(f.text), crc = crc32(body);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true); lh.setUint16(6,0x0800,true); lh.setUint16(8,0,true); lh.setUint16(10,0,true); lh.setUint16(12,33,true);
+    lh.setUint32(14,crc,true); lh.setUint32(18,body.length,true); lh.setUint32(22,body.length,true); lh.setUint16(26,name.length,true); lh.setUint16(28,0,true);
+    parts.push(new Uint8Array(lh.buffer), name, body);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0,0x02014b50,true); ch.setUint16(4,20,true); ch.setUint16(6,20,true); ch.setUint16(8,0x0800,true); ch.setUint16(10,0,true); ch.setUint16(12,0,true); ch.setUint16(14,33,true);
+    ch.setUint32(16,crc,true); ch.setUint32(20,body.length,true); ch.setUint32(24,body.length,true); ch.setUint16(28,name.length,true); ch.setUint32(42,off,true);
+    cen.push(new Uint8Array(ch.buffer), name);
+    off += 30 + name.length + body.length;
+  });
+  const cenSize = cen.reduce((a,b) => a + b.length, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0,0x06054b50,true); end.setUint16(8,files.length,true); end.setUint16(10,files.length,true); end.setUint32(12,cenSize,true); end.setUint32(16,off,true);
+  const all = [...parts, ...cen, new Uint8Array(end.buffer)], out = new Uint8Array(all.reduce((a,b) => a + b.length, 0));
+  let p = 0; all.forEach(a => { out.set(a, p); p += a.length; });
+  return out;
+}
+const xesc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+function colName(i){ let s = ''; i++; while(i){ const m = (i-1) % 26; s = String.fromCharCode(65+m) + s; i = Math.floor((i-1) / 26); } return s; }
+function sheetXml(rows){
+  let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetData>';
+  rows.forEach((r, ri) => {
+    x += '<row r="'+(ri+1)+'">';
+    r.forEach((v, ci) => {
+      if(v === '' || v == null) return;
+      const ref = colName(ci) + (ri+1), st = ri === 0 ? ' s="1"' : '';
+      x += typeof v === 'number' ? '<c r="'+ref+'"'+st+'><v>'+v+'</v></c>' : '<c r="'+ref+'" t="inlineStr"'+st+'><is><t xml:space="preserve">'+xesc(v)+'</t></is></c>';
+    });
+    x += '</row>';
+  });
+  return x + '</sheetData></worksheet>';
+}
+function exportXlsx(lists){
+  const used = new Set(), sheets = lists.map(l => {
+    const years = yearsOf(l), rows = [[T('Pozicija'), T('Naziv'), T('Izvođač'), ...years, T('Ukupno'), ...(l.showPl ? [T('Plejlista')] : [])]];
+    ranked(l).forEach((s,i) => rows.push([i+1, s.title, s.artist, ...years.map(y => +s.pts[y] || ''), total(s), ...(l.showPl ? [s.pl ? T('Da') : ''] : [])]));
+    let name = l.name.replace(/[\[\]:*?\/\\]/g, ' ').slice(0,31).trim() || 'List', base = name, k = 2;
+    while(used.has(name.toLowerCase())) name = base.slice(0,28) + ' ' + (k++);
+    used.add(name.toLowerCase());
+    return { name, xml:sheetXml(rows) };
+  });
+  const NS = 'http://schemas.openxmlformats.org/', files = [
+    { name:'[Content_Types].xml', text:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="'+NS+'package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+      + sheets.map((s,i) => '<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('') + '</Types>' },
+    { name:'_rels/.rels', text:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="'+NS+'package/2006/relationships"><Relationship Id="rId1" Type="'+NS+'officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+    { name:'xl/workbook.xml', text:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="'+NS+'spreadsheetml/2006/main" xmlns:r="'+NS+'officeDocument/2006/relationships"><sheets>' + sheets.map((s,i) => '<sheet name="'+xesc(s.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join('') + '</sheets></workbook>' },
+    { name:'xl/_rels/workbook.xml.rels', text:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="'+NS+'package/2006/relationships">' + sheets.map((s,i) => '<Relationship Id="rId'+(i+1)+'" Type="'+NS+'officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join('') + '<Relationship Id="rId'+(sheets.length+1)+'" Type="'+NS+'officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+    { name:'xl/styles.xml', text:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="'+NS+'spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' },
+    ...sheets.map((s,i) => ({ name:'xl/worksheets/sheet'+(i+1)+'.xml', text:s.xml }))
+  ];
+  const bytes = zip(files), name = 'top100-' + new Date().toISOString().slice(0,10) + '.xlsx';
+  saveBytes(name, bytes, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+}
+function saveBytes(name, bytes, mime){
+  if(window.Top100Android && Top100Android.saveBase64){
+    let bin = ''; for(let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    Top100Android.saveBase64(name, mime, btoa(bin)); return;
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([bytes], { type:mime })); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast(T('Izvezeno'));
+}
+function backup(){
+  const d = Object.assign({ app:'top100', exported:new Date().toISOString() }, data);
+  saveBytes('top100-backup-' + new Date().toISOString().slice(0,10) + '.json', new TextEncoder().encode(JSON.stringify(d)), 'application/json');
+}
+function restore(){
+  const inp = $('fileIn'); inp.value = ''; inp.accept = '.json,application/json';
+  inp.onchange = async () => {
+    const f = inp.files[0]; if(!f) return;
+    let d; try{ d = JSON.parse(await f.text()); }catch(e){ d = null; }
+    if(!d || d.app !== 'top100' || !Array.isArray(d.lists) || !Array.isArray(d.songs)){ toast(T('Ovo nije rezervna kopija Top 100.')); return; }
+    if(!await confirmSheet(T('Zameniti sve trenutne podatke podacima iz kopije?'), T('Zameni'))) return;
+    delete d.app; delete d.exported; data = fix(d); save(); render(); toast(T('Rezervna kopija je vraćena'));
+  };
+  inp.click();
+}
+
+/* ================= events ================= */
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-a]'); if(!el) return;
+  const a = el.dataset.a, id = el.dataset.id;
+  const row = el.closest('.rrow');
+  switch(a){
+    case 'close': closeSheet(); break;
+    case 'settings': openSettings(); break;
+    case 'pick': data.cur = id; ui.view = 'list'; ui.period = 'cur'; ui.q = ''; ui.below = false; save(); render(); window.scrollTo(0,0); break;
+    case 'newList': closeSheet(); newListSheet(); break;
+    case 'import': closeSheet(); pickImportFile(); break;
+    case 'exportAll': exportXlsx(data.lists); break;
+    case 'backup': backup(); break;
+    case 'restore': closeSheet(); restore(); break;
+    case 'update': if(window.Top100Android && Top100Android.checkForUpdate) Top100Android.checkForUpdate(); break;
+    case 'listSettings': listSettings(); break;
+    case 'view': ui.view = el.dataset.v; render(); break;
+    case 'period': ui.period = el.dataset.v === 'cur' ? 'cur' : +el.dataset.v; ui.below = false; render(); break;
+    case 'below':
+      ui.below = !ui.below;
+      if(data.draft && $('rrows')){
+        document.querySelectorAll('.rrow.bl').forEach(r => r.classList.toggle('hide', !ui.below));
+        el.textContent = ui.below ? T('Sakrij ispod crte') : T('Prikaži još {0} ispod crte', document.querySelectorAll('.rrow.bl').length);
+      } else $('rows').innerHTML = listRows(curList());
+      break;
+    case 'song': closeSheet(); openSong(id); break;
+    case 'artist': openArtist(el.dataset.k); break;
+    case 'addSong': openAddSong(); break;
+    case 'startRound': startRound(); break;
+    case 'round': { const r = data.rounds.find(x => x.id === id); if(r) showRound(r, false); break; }
+    case 'undoRound': {
+      const r = data.rounds.find(x => x.id === id); if(!r) break;
+      closeSheet();
+      if(await confirmSheet(T('Poništiti poslednji krug? Njegovi poeni se oduzimaju.'), T('Poništi'))) undoRound(r);
+      break;
+    }
+    case 'plus': if(row) setAdd(row.dataset.id, (data.draft.adds[row.dataset.id] || 0) + +el.dataset.v, row); break;
+    case 'minus': if(row){ const cur = data.draft.adds[row.dataset.id] || 0, step = data.settings.quick[0] || 1; setAdd(row.dataset.id, cur > 0 ? Math.max(0, cur - step) : cur < 0 ? Math.min(0, cur + step) : 0, row); } break;
+    case 'finish': finishRound(); break;
+    case 'roundMenu': roundMenu(); break;
+    case 'roundYear': roundYear(); break;
+    case 'set': {
+      data.settings[el.dataset.k] = el.dataset.v; save(); render();
+      closeSheet(); openSettings(); break;
+    }
+  }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if(t.id === 'q'){ ui.q = t.value; ui.below = false; $('rows').innerHTML = listRows(curList()); }
+  else if(t.id === 'rq'){
+    const q = norm(t.value);
+    document.querySelectorAll('.rrow').forEach(r => r.classList.toggle('hide', q ? !r.dataset.s.includes(q) : (r.classList.contains('bl') && !ui.below)));
+    const cut = $('rcut'); if(cut) cut.classList.toggle('hide', !!q);
+  }
+  else if(t.classList.contains('cnt')){ const row = t.closest('.rrow'); setAdd(row.dataset.id, numv(t.value) || 0, row, true); }
+});
+document.addEventListener('focusin', e => { if(e.target.classList && e.target.classList.contains('cnt')) e.target.select(); });
+function roundMenu(){
+  openSheet('<h2>'+esc(T('Krug u toku'))+'</h2><p class="sub">'+esc(T('Pokrenut'))+' '+fdate(data.draft.at)+'</p><div class="stack">'
+    + '<button class="btn block" data-a="roundYear">'+esc(T('Promeni godinu'))+' ('+data.draft.year+')</button>'
+    + '<button class="btn block" id="rmAdd">'+esc(T('Dodaj pesmu'))+'</button>'
+    + '<button class="btn danger block" id="rmX">'+esc(T('Odbaci krug'))+'</button>'
+    + '<button class="btn primary block" data-a="close">'+esc(T('Zatvori'))+'</button></div>', el => {
+    el.querySelector('#rmAdd').onclick = () => { closeSheet(); openAddSong(); };
+    el.querySelector('#rmX').onclick = async () => {
+      closeSheet();
+      if(!await confirmSheet(T('Odbaciti ovaj krug? Uneti poeni se brišu.'), T('Odbaci'))) return;
+      data.draft = null; save(); render();
+    };
+  });
+}
+function roundYear(){
+  const y = CY(), opts = [y+1, y, y-1, y-2, y-3];
+  closeSheet();
+  openSheet('<h2>'+esc(T('Promeni godinu'))+'</h2><p class="sub">'+esc(T('poeni idu u godinu'))+'</p><div class="chips" style="flex-wrap:wrap">'
+    + opts.map(v => '<button class="chip'+(data.draft.year===v?' on':'')+'" data-y="'+v+'">'+v+'</button>').join('') + '</div><input class="field mt" id="ryI" type="number" inputmode="numeric" value="'+data.draft.year+'">'
+    + '<div class="two mt"><button class="btn" data-a="close">'+esc(T('Otkaži'))+'</button><button class="btn primary" id="ryOk">'+esc(T('Sačuvaj'))+'</button></div>', el => {
+    el.querySelectorAll('[data-y]').forEach(b => b.onclick = () => { el.querySelector('#ryI').value = b.dataset.y; el.querySelectorAll('[data-y]').forEach(x => x.classList.toggle('on', x === b)); });
+    el.querySelector('#ryOk').onclick = () => {
+      const v = Math.round(+el.querySelector('#ryI').value);
+      if(v >= 1900 && v <= 2200){ data.draft.year = v; save(); }
+      closeSheet(); render();
+    };
+  });
+}
+
+render();
+if(window.Top100Android && Top100Android.ready) Top100Android.ready();
+if('serviceWorker' in navigator && location.protocol === 'https:' && !window.Top100Android){
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
