@@ -67,7 +67,7 @@ button{background:none;border:0;cursor:pointer}
 .lhead h1{font-size:1.55rem;font-weight:800;letter-spacing:-.03em;line-height:1.15}
 .lhead p{color:var(--muted);font-weight:600;font-size:.86rem;margin-top:3px}
 .seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:12px}
-.seg button{flex:1;padding:9px 6px;border-radius:10px;font-weight:700;font-size:.9rem;color:var(--muted)}
+.seg button{flex:1;padding:9px 4px;border-radius:10px;font-weight:700;font-size:.86rem;color:var(--muted);white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .seg button.on{background:var(--surface2);color:var(--text)}
 .search{display:flex;gap:8px;margin-bottom:10px}
 .search input{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;font-weight:600;outline:none}
@@ -194,6 +194,27 @@ select.field{appearance:none;-webkit-appearance:none;background-image:linear-gra
 .ok{background:var(--pos-soft);color:var(--pos);border-radius:12px;padding:9px 12px;font-weight:700;font-size:.84rem;margin-top:8px}
 .prev{color:var(--muted);font-weight:600;font-size:.84rem;margin-top:8px;line-height:1.5}
 .prev b{color:var(--text)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 8px;text-align:center}
+.kpi b{display:block;font-size:1.35rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi span{display:block;color:var(--muted);font-weight:700;font-size:.72rem;margin-top:2px}
+.card h3 small{color:var(--muted);font-weight:700;font-size:.78rem;margin-left:4px}
+.card .mini{margin-top:6px}
+.card h4{font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 0 2px}
+.hb{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:6px 0;cursor:pointer}
+.hb .x{font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb .x small{color:var(--muted);font-weight:600}
+.hb .v{font-weight:800;font-size:.9rem;font-variant-numeric:tabular-nums}
+.hb .tr{grid-column:1/-1;height:8px;border-radius:4px;background:var(--surface2);overflow:hidden}
+.hb .tr i{display:block;height:100%;border-radius:4px;background:var(--accent)}
+.rec{display:flex;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.rec:first-of-type{border-top:0}
+.rec .big{flex:none;min-width:54px;text-align:center;font-weight:800;font-size:1.15rem;color:var(--accent);font-variant-numeric:tabular-nums}
+.rec .x{min-width:0;flex:1}
+.rec .x b{display:block;font-weight:800;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec .x span{display:block;color:var(--muted);font-weight:600;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.share{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;margin:10px 0 6px}
+.share i{display:block;height:100%}
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);transform:translate(-50%,20px);background:var(--text);color:var(--bg);padding:11px 18px;border-radius:14px;font-weight:700;font-size:.9rem;opacity:0;pointer-events:none;transition:.22s;z-index:80;max-width:90vw;text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 </style>
@@ -257,6 +278,16 @@ const EN = {
   'Lista po godini {0}. Kretanje je u odnosu na {1}.':'Chart for {0}. Movement is compared to {1}.',
   'Nova pesma':'New song','U krugu':'In round','Pokrenut':'Started','Poništi':'Undo','Sve godine':'All years','Tekuća godina':'Current year',
   'Poslednjih {0} godina':'Last {0} years',
+  'Statistika':'Stats','Pesme':'Songs','Svi poeni':'All points','Godina':'Years','Krugova':'Rounds','Poena u {0}':'Points in {0}',
+  'Najjača godina: {0} ({1} poena).':'Best year: {0} ({1} points).','{0} u odnosu na {1}: {2}%.':'{0} compared to {1}: {2}%.',
+  'Broj 1 svake godine':'Number 1 of every year','Top 10 izvođača':'Top 10 artists','Najviše pesama u top {0}':'Most songs in the top {0}',
+  'Koliko vuče vrh liste':'How much the top carries','Top 10 ima {0}% svih poena':'The top 10 hold {0}% of all points','top {0} ima {1}%':'the top {0} hold {1}%',
+  'najviše poena u jednoj godini ({0})':'most points in one year ({0})','godina zaredom sa poenima':'years in a row with points','krugova na #1':'rounds at #1',
+  'najviše u jednom krugu ({0})':'most in one round ({0})','Rekordi':'Records','Najverniji':'Most loyal','godina sa poenima':'years with points','broj godina':'number of years',
+  'Najveći rast':'Biggest rise','Najveći pad':'Biggest drop','Novajlije u {0}':'Newcomers in {0}','Bez poena u {0}':'No points in {0}',
+  'Na pragu top {0}':'Knocking on the top {0}','fali {0}':'{0} short','{0} od {1} pesama iz top {2} je u plejlisti.':'{0} of {1} songs in the top {2} are in the playlist.',
+  'Nedostaju u plejlisti':'Missing from the playlist','i još {0}':'and {0} more','Krugovi':'Rounds','poena ukupno':'points in total','prosek po krugu':'average per round',
+  'dana između krugova':'days between rounds','Prvi krug {0}, poslednji {1}':'First round {0}, last {1}',
   '[[PDF]] i slike ne mogu da se uvezu. Preuzmi tabelu kao [[Microsoft Excel (.xlsx)]].':'[[PDF]] files and images cannot be imported. Download the sheet as [[Microsoft Excel (.xlsx)]].',
   'Starija kopija iste liste, zato je isključena. Najnoviji list već ima sve godine.':'Older copy of the same list, so it is turned off. The newest sheet already has all years.'
 };
@@ -413,8 +444,9 @@ function render(){
   } else {
     const n = songsOf(l.id).length;
     h += '<div class="lhead"><div><h1>'+esc(l.name)+'</h1><p>'+n+' '+esc(T('pesama'))+' · '+esc(T('top {0}', l.size))+' · '+esc(rankLabel(l))+'</p></div><button class="icon" data-a="listSettings">'+ICON.more+'</button></div>';
-    h += '<div class="seg">' + [['list','Lista'],['artists','Izvođači'],['history','Istorija']].map(([v,t]) => '<button class="'+(ui.view===v?'on':'')+'" data-a="view" data-v="'+v+'">'+esc(T(t))+'</button>').join('') + '</div>';
+    h += '<div class="seg">' + [['list','Lista'],['artists','Izvođači'],['history','Istorija'],['stats','Statistika']].map(([v,t]) => '<button class="'+(ui.view===v?'on':'')+'" data-a="view" data-v="'+v+'">'+esc(T(t))+'</button>').join('') + '</div>';
     if(ui.view === 'history') h += historyView(l);
+    else if(ui.view === 'stats') h += statsView(l);
     else {
       const ys = yearsOf(l).reverse();
       if(ui.period !== 'cur' && !ys.includes(ui.period)) ui.period = 'cur';
@@ -475,6 +507,114 @@ function artistsView(l){
   const gs = artistGroups(l, ui.period);
   if(!gs.length) return '<div class="empty">'+esc(T('Nema izvođača.'))+'</div>';
   return '<div class="rows">' + gs.map((e,i) => '<div class="row" data-a="artist" data-k="'+esc(e.k)+'"><div class="pos">'+(i+1)+'</div><div></div><div class="main"><div class="t">'+esc(e.name||'—')+'</div><div class="a">'+e.songs.length+' '+esc(T('pesama'))+'</div></div><div class="sc"><b>'+fmt(e.sc)+'</b></div></div>').join('') + '</div>';
+}
+
+/* ================= stats ================= */
+function statsView(l){
+  const songs = songsOf(l.id);
+  if(!songs.length) return '<div class="empty">'+esc(T('Nema pesama.'))+'</div>';
+  const N = l.size || 100, rank = ranked(l), pos = orderMap(rank.map(s => s.id)), years = yearsOf(l), rs = roundsOf(l.id);
+  const lastY = years.length ? years[years.length-1] : CY(), sub = s => esc(s.artist)+' · #'+pos.get(s.id);
+  const recRow = (big, s, extra) => '<div class="rec" data-a="song" data-id="'+s.id+'"><div class="big">'+big+'</div><div class="x"><b>'+esc(s.title)+'</b><span>'+sub(s)+(extra ? ' · '+esc(extra) : '')+'</span></div></div>';
+  const card = (title, body, note) => '<div class="card"><h3>'+esc(title)+(note ? '<small>'+esc(note)+'</small>' : '')+'</h3>'+body+'</div>';
+  const allPts = songs.reduce((a,s) => a + total(s), 0), artists = artistGroups(l, 'cur');
+  let h = '<div class="kpis">'
+    + '<div class="kpi"><b>'+songs.length+'</b><span>'+esc(T('Pesme'))+'</span></div>'
+    + '<div class="kpi"><b>'+artists.length+'</b><span>'+esc(T('Izvođači'))+'</span></div>'
+    + '<div class="kpi"><b>'+fmt(allPts)+'</b><span>'+esc(T('Svi poeni'))+'</span></div>'
+    + '<div class="kpi"><b>'+years.length+'</b><span>'+esc(T('Godina'))+(years.length ? ' ('+years[0]+'–'+String(lastY).slice(2)+')' : '')+'</span></div>'
+    + '<div class="kpi"><b>'+rs.length+'</b><span>'+esc(T('Krugova'))+'</span></div>'
+    + '<div class="kpi"><b>'+fmt(songs.reduce((a,s) => a + (+s.pts[CY()]||0), 0))+'</b><span>'+esc(T('Poena u {0}', CY()))+'</span></div></div>';
+
+  // points per year
+  if(years.length){
+    const sums = years.map(y => songs.reduce((a,s) => a + (+s.pts[y]||0), 0)), max = Math.max(...sums, 1);
+    const W = 340, H = 150, pb = 18, pt = 16, bw = (W-4) / years.length;
+    const svg = '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img">' + years.map((y,i) => {
+      const v = sums[i], bh = (H-pt-pb) * v / max, x = 2 + i*bw, gap = Math.min(4, bw*.2);
+      return '<g><title>'+y+': '+fmt(v)+' '+esc(T('poena'))+'</title><rect x="'+(x+gap/2)+'" y="'+(H-pb-bh)+'" width="'+(bw-gap)+'" height="'+Math.max(bh, v ? 2 : 0)+'" rx="3" fill="var(--accent)" opacity="'+(y === lastY ? 1 : .75)+'"/>'
+        + (years.length <= 14 || i % 2 === years.length % 2 ? '<text x="'+(x+bw/2)+'" y="'+(H-5)+'" text-anchor="middle" font-size="9" font-weight="700" fill="var(--muted)">\''+String(y).slice(2)+'</text>' : '')
+        + (v === max || y === lastY ? '<text x="'+(x+bw/2)+'" y="'+(H-pb-bh-4)+'" text-anchor="middle" font-size="9" font-weight="800" fill="var(--text)">'+fmt(v)+'</text>' : '') + '</g>';
+    }).join('') + '</svg>';
+    const done = years.filter(y => y < CY()), ry = done.length > 1 ? done[done.length-1] : lastY;
+    const cur = sums[years.indexOf(ry)], prev = years.includes(ry-1) ? sums[years.indexOf(ry-1)] : 0;
+    h += card(T('Poeni po godinama'), svg + '<p class="note" style="margin-top:8px">'+esc(T('Najjača godina: {0} ({1} poena).', years[sums.indexOf(max)], fmt(max)))+(prev ? ' '+esc(T('{0} u odnosu na {1}: {2}%.', ry, ry-1, (cur >= prev ? '+' : '')+Math.round((cur-prev)/prev*100))) : '')+'</p>');
+  }
+
+  // number 1 of every year
+  if(years.length > 1){
+    h += card(T('Broj 1 svake godine'), '<ul class="mini">' + years.slice().reverse().map(y => { const t = ranked(l, y)[0]; return t ? '<li data-a="song" data-id="'+t.id+'" style="cursor:pointer"><span class="n">'+y+'</span><span class="x">'+esc(t.title)+' <small>'+esc(t.artist)+'</small></span><span class="r">'+fmt(t.pts[y])+'</span></li>' : ''; }).join('') + '</ul>');
+  }
+
+  // top artists
+  const ta = artists.slice(0, 10);
+  if(ta.length){
+    const m = Math.max(ta[0].sc, 1);
+    h += card(T('Top 10 izvođača'), ta.map((e,i) => '<div class="hb" data-a="artist" data-k="'+esc(e.k)+'"><div class="x">'+(i+1)+'. '+esc(e.name||'—')+' <small>· '+e.songs.length+' '+esc(T('pesama'))+'</small></div><div class="v">'+fmt(e.sc)+'</div><div class="tr"><i style="width:'+(e.sc/m*100).toFixed(1)+'%"></i></div></div>').join(''));
+    const inTop = artists.map(e => ({ e, n:e.songs.filter(s => pos.get(s.id) <= N).length })).sort((a,b) => b.n-a.n).slice(0,5).filter(x => x.n > 1);
+    if(inTop.length) h += card(T('Najviše pesama u top {0}', N), '<ul class="mini">' + inTop.map(x => '<li data-a="artist" data-k="'+esc(x.e.k)+'" style="cursor:pointer"><span class="x">'+esc(x.e.name)+'</span><span class="r">'+x.n+'</span></li>').join('') + '</ul>');
+  }
+
+  // concentration
+  if(rank.length > 10 && allPts){
+    const sc = rank.map(s => score(s, l, 'cur')), all = sc.reduce((a,b) => a+b, 0) || 1;
+    const p10 = sc.slice(0,10).reduce((a,b) => a+b, 0) / all * 100, pN = sc.slice(0,N).reduce((a,b) => a+b, 0) / all * 100;
+    h += card(T('Koliko vuče vrh liste'), '<div class="share"><i style="width:'+p10+'%;background:var(--accent)"></i><i style="width:'+Math.max(0,pN-p10)+'%;background:var(--accent);opacity:.45"></i><i style="flex:1;background:var(--surface2)"></i></div>'
+      + '<p class="note">'+esc(T('Top 10 ima {0}% svih poena', Math.round(p10)))+(rank.length > N ? ', '+esc(T('top {0} ima {1}%', N, Math.round(pN))) : '')+'.</p>');
+  }
+
+  // records
+  let best = null; songs.forEach(s => { for(const y in s.pts){ const v = +s.pts[y]; if(!best || v > best.v) best = { s, y, v }; } });
+  const streakOf = s => { const ys = Object.keys(s.pts).filter(y => +s.pts[y]).map(Number).sort((a,b) => a-b); let b = 0, c = 0, p = null; ys.forEach(y => { c = p === y-1 ? c+1 : 1; b = Math.max(b, c); p = y; }); return { b, n:ys.length, first:ys[0] }; };
+  const st = songs.map(s => ({ s, ...streakOf(s) }));
+  const longest = st.slice().sort((a,b) => b.b-a.b || total(b.s)-total(a.s))[0];
+  const loyal = st.slice().sort((a,b) => b.n-a.n || total(b.s)-total(a.s)).slice(0,5);
+  let recs = '';
+  if(best) recs += recRow(fmt(best.v), best.s, T('najviše poena u jednoj godini ({0})', best.y));
+  if(longest && longest.b > 1) recs += recRow(longest.b, longest.s, T('godina zaredom sa poenima'));
+  const r1 = {}; rs.forEach(r => { if(r.order[0]) r1[r.order[0]] = (r1[r.order[0]]||0) + 1; });
+  const king = Object.entries(r1).sort((a,b) => b[1]-a[1])[0];
+  if(king && songById(king[0])) recs += recRow(king[1], songById(king[0]), T('krugova na #1'));
+  let bigAdd = null; rs.forEach(r => { for(const [id,v] of Object.entries(r.adds)) if(songById(id) && (!bigAdd || v > bigAdd.v)) bigAdd = { id, v, at:r.at }; });
+  if(bigAdd) recs += recRow('+'+fmt(bigAdd.v), songById(bigAdd.id), T('najviše u jednom krugu ({0})', fdate(bigAdd.at)));
+  if(recs) h += card(T('Rekordi'), recs);
+  if(loyal.length && loyal[0].n > 1) h += card(T('Najverniji'), loyal.map(x => recRow(x.n, x.s, T('godina sa poenima'))).join(''), T('broj godina'));
+
+  // rise and fall, newcomers: compare finished years, not the year that is still running
+  const done = years.filter(y => y < CY()), refY = done.length > 1 ? done[done.length-1] : lastY;
+  if(years.length > 1){
+    const lastY = refY;
+    const d = songs.map(s => ({ s, d:(+s.pts[lastY]||0) - (+s.pts[lastY-1]||0) }));
+    const up = d.filter(x => x.d > 0).sort((a,b) => b.d-a.d).slice(0,5), dn = d.filter(x => x.d < 0).sort((a,b) => a.d-b.d).slice(0,5);
+    if(up.length) h += card(T('Najveći rast'), up.map(x => recRow('+'+fmt(x.d), x.s, lastY+': '+fmt(x.s.pts[lastY]||0)+' · '+(lastY-1)+': '+fmt(x.s.pts[lastY-1]||0))).join(''), lastY+' / '+(lastY-1));
+    if(dn.length) h += card(T('Najveći pad'), dn.map(x => recRow(fmt(x.d), x.s, lastY+': '+fmt(x.s.pts[lastY]||0)+' · '+(lastY-1)+': '+fmt(x.s.pts[lastY-1]||0))).join(''), lastY+' / '+(lastY-1));
+    const fresh = st.filter(x => x.first === lastY).sort((a,b) => (+b.s.pts[lastY]||0) - (+a.s.pts[lastY]||0));
+    if(fresh.length) h += card(T('Novajlije u {0}', lastY), fresh.slice(0,8).map(x => recRow(fmt(x.s.pts[lastY]), x.s, '')).join(''), String(fresh.length));
+    const gone = songs.filter(s => +s.pts[lastY-1] && !+s.pts[lastY] && pos.get(s.id) <= N).sort((a,b) => pos.get(a.id)-pos.get(b.id));
+    if(gone.length) h += card(T('Bez poena u {0}', lastY), gone.slice(0,8).map(s => recRow('#'+pos.get(s.id), s, (lastY-1)+': '+fmt(s.pts[lastY-1]))).join(''), String(gone.length));
+  }
+
+  // threshold
+  if(rank.length > N){
+    const cut = score(rank[N-1], l, 'cur');
+    h += card(T('Na pragu top {0}', N), rank.slice(N, N+5).map((s,i) => recRow('#'+(N+1+i), s, T('fali {0}', fmt(cut - score(s, l, 'cur') || 1)))).join(''));
+  }
+
+  // playlist
+  if(l.showPl){
+    const top = rank.slice(0, N), inPl = top.filter(s => s.pl).length, miss = top.filter(s => !s.pl);
+    h += card(T('Plejlista'), '<div class="share"><i style="width:'+(inPl/Math.max(top.length,1)*100)+'%;background:var(--pos)"></i><i style="flex:1;background:var(--surface2)"></i></div><p class="note">'+esc(T('{0} od {1} pesama iz top {2} je u plejlisti.', inPl, top.length, N))+'</p>'
+      + (miss.length ? '<h4>'+esc(T('Nedostaju u plejlisti'))+'</h4>' + miss.slice(0,10).map(s => recRow('#'+pos.get(s.id), s, '')).join('') + (miss.length > 10 ? '<p class="note">'+esc(T('i još {0}', miss.length-10))+'</p>' : '') : ''));
+  }
+
+  // rounds
+  if(rs.length){
+    const sums = rs.map(r => Object.values(r.adds).reduce((a,b) => a+b, 0)), tot = sums.reduce((a,b) => a+b, 0);
+    const days = rs.length > 1 ? Math.round((new Date(rs[rs.length-1].at) - new Date(rs[0].at)) / 864e5 / (rs.length-1)) : null;
+    h += card(T('Krugovi'), '<div class="kpis" style="margin:8px 0 0"><div class="kpi"><b>'+fmt(tot)+'</b><span>'+esc(T('poena ukupno'))+'</span></div><div class="kpi"><b>'+fmt(tot/rs.length)+'</b><span>'+esc(T('prosek po krugu'))+'</span></div><div class="kpi"><b>'+(days != null ? days : '—')+'</b><span>'+esc(T('dana između krugova'))+'</span></div></div>'
+      + '<p class="note" style="margin-top:8px">'+esc(T('Prvi krug {0}, poslednji {1}', fdate(rs[0].at), fdate(rs[rs.length-1].at)))+'</p>');
+  }
+  return h;
 }
 
 function historyView(l){
