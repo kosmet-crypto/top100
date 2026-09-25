@@ -256,7 +256,8 @@ const EN = {
   'Kretanje se računa od prethodnog kruga.':'Movement is counted from the previous round.',
   'Lista po godini {0}. Kretanje je u odnosu na {1}.':'Chart for {0}. Movement is compared to {1}.',
   'Nova pesma':'New song','U krugu':'In round','Pokrenut':'Started','Poništi':'Undo','Sve godine':'All years','Tekuća godina':'Current year',
-  'Poslednjih {0} godina':'Last {0} years'
+  'Poslednjih {0} godina':'Last {0} years',
+  'Starija kopija iste liste, zato je isključena. Najnoviji list već ima sve godine.':'Older copy of the same list, so it is turned off. The newest sheet already has all years.'
 };
 const TR_L = {'Lj':'Љ','LJ':'Љ','lj':'љ','Nj':'Њ','NJ':'Њ','nj':'њ','Dž':'Џ','DŽ':'Џ','dž':'џ'};
 const TR_1 = {a:'а',b:'б',v:'в',g:'г',d:'д',đ:'ђ',e:'е',ž:'ж',z:'з',i:'и',j:'ј',k:'к',l:'л',m:'м',n:'н',o:'о',p:'п',r:'р',s:'с',t:'т',ć:'ћ',u:'у',f:'ф',h:'х',c:'ц',č:'ч',š:'ш'};
@@ -932,11 +933,28 @@ function openImport(sheets){
     const an = analyze(sh.rows), ex = extract(an), same = data.lists.find(l => norm(l.name) === norm(sh.name));
     return { sh, an, ex, on:!sh.hidden && ex.recs.length > 0, name:sh.name, target:same ? same.id : 'new' };
   });
+  /* Yearly copies of the same list ("World 100 2024", "World 100 2025"): each holds all years up to
+     then, so only the newest is imported, named without the year. */
+  const groups = new Map();
+  items.forEach(it => {
+    const m = /^(.*?\S)[\s\-_.,()]*((?:19|20)\d\d)\)?$/.exec(it.sh.name.trim()); if(!m) return;
+    const k = norm(m[1]); if(!groups.has(k)) groups.set(k, []);
+    groups.get(k).push({ it, y:+m[2], base:m[1].trim() });
+  });
+  groups.forEach(g => {
+    if(g.length < 2) return;
+    g.sort((a,b) => b.y-a.y);
+    const newest = g.find(x => x.it.ex.recs.length && !x.it.sh.hidden) || g[0];
+    g.forEach(x => { if(x !== newest){ x.it.on = false; x.it.copy = true; } });
+    newest.it.name = newest.base;
+    const same = data.lists.find(l => norm(l.name) === norm(newest.base)); if(same) newest.it.target = same.id;
+  });
   const ROLES = [['skip','Preskoči'],['title','Pesma (naziv)'],['artist','Izvođač'],['pos','Prethodna pozicija'],['total','Zbir (samo provera)'],['pl','Plejlista (da/ne)']];
   const card = (it, k) => {
     const ex = it.ex;
     let h = '<div class="imp'+(it.on?'':' off')+'" data-k="'+k+'"><div class="hd"><input type="checkbox" data-f="on"'+(it.on?' checked':'')+'><input class="field" data-f="name" value="'+esc(it.name)+'"></div>';
     h += '<p class="prev">'+esc(T('{0} pesama', ex.recs.length))+' · '+esc(ex.years.length ? T('godine {0}', ex.years[0] + (ex.years.length > 1 ? '–' + ex.years[ex.years.length-1] : '')) : T('Nema godina'))+(it.sh.hidden ? ' · '+esc(T('Sakriven list')) : '')+'</p>';
+    if(it.copy) h += '<p class="prev">'+esc(T('Starija kopija iste liste, zato je isključena. Najnoviji list već ima sve godine.'))+'</p>';
     if(!it.on && !ex.recs.length){ h += '<p class="warn">'+esc(T('Nema kolone sa nazivom pesme.'))+'</p>'; }
     h += '<label class="lbl">'+esc(T('Uvezi u'))+'</label><select class="field" data-f="target"><option value="new">'+esc(T('nova lista'))+'</option>' + data.lists.map(l => '<option value="'+l.id+'"'+(it.target===l.id?' selected':'')+'>'+esc(T('spoji sa „{0}“', l.name))+'</option>').join('') + '</select>';
     h += '<div class="cols mt">' + it.an.cols.filter(c => c.head || c.sample).map(c => '<div class="col'+(c.role==='skip'?' skip':'')+'"><div class="h">'+esc(c.head || '('+String.fromCharCode(65 + (c.i % 26))+')')+'</div><div class="v">'+esc(c.sample || '—')+'</div><select class="field" data-col="'+c.i+'">'
