@@ -277,7 +277,8 @@ const EN = {
   'Kretanje se računa od prethodnog kruga.':'Movement is counted from the previous round.',
   'Lista po godini {0}. Kretanje je u odnosu na {1}.':'Chart for {0}. Movement is compared to {1}.',
   'Nova pesma':'New song','U krugu':'In round','Pokrenut':'Started','Poništi':'Undo','Sve godine':'All years','Tekuća godina':'Current year',
-  'Poslednjih {0} godina':'Last {0} years',
+  'Poslednjih {0} godina':'Last {0} years','međuzbir':'subtotal',
+  'Međuzbirovi se preskaču: {0}':'Subtotals are skipped: {0}',
   'Statistika':'Stats','Pesme':'Songs','Svi poeni':'All points','Godina':'Years','Krugova':'Rounds','Poena u {0}':'Points in {0}',
   'Najjača godina: {0} ({1} poena).':'Best year: {0} ({1} points).','{0} u odnosu na {1}: {2}%.':'{0} compared to {1}: {2}%.',
   'Broj 1 svake godine':'Number 1 of every year','Top 10 izvođača':'Top 10 artists','Najviše pesama u top {0}':'Most songs in the top {0}',
@@ -1009,7 +1010,14 @@ async function readTable(file){
   return [{ name:file.name.replace(/\.[^.]+$/, ''), hidden:false, rows:csvRows(text) }];
 }
 const numv = s => { s = String(s ?? '').trim().replace(/\s/g,''); if(!s) return null; if(/^-?\d+,\d+$/.test(s)) s = s.replace(',','.'); const n = Number(s); return isFinite(n) ? n : null; };
-const yearOf = h => { const m = /^((?:19|20)\d\d)(?:\.0*)?\.?$/.exec(String(h).trim()); return m ? +m[1] : null; };
+/* Year a points column belongs to: "2014", but also "Do 2011" (everything up to 2011) or "6. 2012" (part of 2012). */
+const yearOf = h => {
+  h = String(h).trim(); if(h.length > 16) return null;
+  const m = /^((?:19|20)\d\d)(?:\.0*)?\.?$/.exec(h); if(m) return +m[1];
+  const ys = h.match(/(?:19|20)\d\d/g); if(!ys || ys.length !== 1) return null;
+  const rest = norm(h.replace(ys[0], ' '));
+  return /^(do|od|to|until|up to|pre|before|till|h|q|m|pol|polugodiste|mesec)?[\s\d.\/-]*$/.test(rest) ? +ys[0] : null;
+};
 const RX = {
   pos:/^(#|br|rb|r br|poz|pozicija|pozicije|mesto|mjesto|position|pos|rank|place|prethodna pozicija)$/,
   title:/(pesm|pjesm|naziv|naslov|song|title|track|numer)/,
@@ -1048,7 +1056,27 @@ function analyze(rows){
     else if(c.role === 'text?') c.role = !has('title') ? 'title' : !has('artist') ? 'artist' : 'skip';
   });
   ['title','artist','pos','total','pl'].forEach(r => { let seen = false; cols.forEach(c => { if(c.role === r){ if(seen) c.role = 'skip'; seen = true; } }); });
+  markSubtotals(body, cols);
   return { h, body, cols };
+}
+/* A points column that equals the sum of the columns right before it ("do 2013" after the earlier
+   years, "2012" after "6. 2012" and "12. 2012") is a subtotal: counting it would add points twice. */
+function markSubtotals(body, cols){
+  const val = (r, c) => numv(r[c.i]) || 0, kept = [];
+  cols.forEach(c => {
+    if(c.role !== 'year') return;
+    let sub = false;
+    for(let k = kept.length; k >= 1 && !sub; k--){
+      const parts = kept.slice(-k); let rows = 0, ok = 0;
+      body.forEach(r => {
+        const v = val(r, c), sum = parts.reduce((a, p) => a + val(r, p), 0);
+        if(!v && !sum) return;
+        rows++; if(Math.abs(v - sum) < .001) ok++;
+      });
+      if(rows >= 3 && ok >= rows * .95 && (k > 1 || ok === rows)) sub = true;
+    }
+    if(sub){ c.role = 'skip'; c.sub = true; } else kept.push(c);
+  });
 }
 function extract(an){
   const by = r => an.cols.find(c => c.role === r), tc = by('title'), ac = by('artist'), pc = by('pos'), zc = by('total'), lc = by('pl');
@@ -1103,9 +1131,11 @@ function openImport(sheets){
     if(it.copy) h += '<p class="prev">'+esc(T('Starija kopija iste liste, zato je isključena. Najnoviji list već ima sve godine.'))+'</p>';
     if(!it.on && !ex.recs.length){ h += '<p class="warn">'+esc(T('Nema kolone sa nazivom pesme.'))+'</p>'; }
     h += '<label class="lbl">'+esc(T('Uvezi u'))+'</label><select class="field" data-f="target"><option value="new">'+esc(T('nova lista'))+'</option>' + data.lists.map(l => '<option value="'+l.id+'"'+(it.target===l.id?' selected':'')+'>'+esc(T('spoji sa „{0}“', l.name))+'</option>').join('') + '</select>';
-    h += '<div class="cols mt">' + it.an.cols.filter(c => c.head || c.sample).map(c => '<div class="col'+(c.role==='skip'?' skip':'')+'"><div class="h">'+esc(c.head || '('+String.fromCharCode(65 + (c.i % 26))+')')+'</div><div class="v">'+esc(c.sample || '—')+'</div><select class="field" data-col="'+c.i+'">'
+    h += '<div class="cols mt">' + it.an.cols.filter(c => c.head || c.sample).map(c => '<div class="col'+(c.role==='skip'?' skip':'')+'"><div class="h">'+esc(c.head || '('+String.fromCharCode(65 + (c.i % 26))+')')+'</div><div class="v">'+esc(c.sub ? T('međuzbir') : (c.sample || '—'))+'</div><select class="field" data-col="'+c.i+'">'
       + (c.year ? '<option value="year"'+(c.role==='year'?' selected':'')+'>'+esc(T('Godina {0}', c.year))+'</option>' : '')
       + ROLES.map(([v,t]) => '<option value="'+v+'"'+(c.role===v?' selected':'')+'>'+esc(T(t))+'</option>').join('') + '</select></div>').join('') + '</div>';
+    const subs = it.an.cols.filter(c => c.sub && c.role === 'skip');
+    if(subs.length) h += '<p class="prev">'+esc(T('Međuzbirovi se preskaču: {0}', subs.map(c => c.head).join(', ')))+'</p>';
     if(ex.hasTotal){
       h += ex.bad.length ? '<div class="warn"><details><summary>'+esc(T('Zbir se ne slaže u {0} redova', ex.bad.length))+'</summary><ul>' + ex.bad.slice(0,30).map(b => '<li>'+esc(b.rec.title)+': '+esc(T('tabela kaže {0}, godine daju {1}', fmt(b.z), fmt(b.sum)))+'</li>').join('') + '</ul></details></div>'
         : (ex.recs.length ? '<div class="ok">'+esc(T('Zbir se slaže u svim redovima'))+' ✓</div>' : '');
