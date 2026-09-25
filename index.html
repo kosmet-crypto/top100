@@ -282,7 +282,7 @@ const EN = {
   'Lider liste na kraju godine':'Chart leader at the end of each year','zbir do te godine':'total up to that year',
   'Istorija po godinama (jedan rezultat za svaku godinu)':'History by year (one result for every year)','Napravi istoriju po godinama':'Build history by year',
   'Napraviti istoriju po godinama? Za svaku završenu godinu pravi se jedan rezultat, a tvoji krugovi ostaju.':'Build history by year? One result is made for every finished year; your rounds stay.',
-  'Godina u istoriji: {0}':'Years in history: {0}','međuzbir':'subtotal',
+  'Godina u istoriji: {0}':'Years in history: {0}','međuzbir':'subtotal','Kolone {0} se računaju jer ih računa i tvoj zbir.':'Columns {0} are counted because your total counts them too.',
   'Međuzbirovi se preskaču: {0}':'Subtotals are skipped: {0}',
   'Statistika':'Stats','Pesme':'Songs','Svi poeni':'All points','Godina':'Years','Krugova':'Rounds','Poena u {0}':'Points in {0}',
   'Najjača godina: {0} ({1} poena).':'Best year: {0} ({1} points).','{0} u odnosu na {1}: {2}%.':'{0} compared to {1}: {2}%.',
@@ -1113,6 +1113,13 @@ function analyze(rows){
   });
   ['title','artist','pos','total','pl'].forEach(r => { let seen = false; cols.forEach(c => { if(c.role === r){ if(seen) c.role = 'skip'; seen = true; } }); });
   markSubtotals(body, cols);
+  /* If the sheet's own total counts those subtotal columns too, follow the sheet: the total is what
+     the list has always been ranked by. */
+  const tc = cols.find(c => c.role === 'total'), subs = cols.filter(c => c.sub);
+  if(tc && subs.length){
+    const rate = withSubs => { let n = 0, ok = 0; body.forEach(r => { const z = numv(r[tc.i]); if(z == null) return; n++; let t = 0; cols.forEach(c => { if(c.role === 'year' || (withSubs && c.sub)) t += numv(r[c.i]) || 0; }); if(Math.abs(t - z) < .001) ok++; }); return n ? ok / n : 0; };
+    if(rate(true) > rate(false)) subs.forEach(c => { c.role = 'year'; c.sub = false; c.inTotal = true; });
+  }
   return { h, body, cols };
 }
 /* A points column that equals the sum of the columns right before it ("do 2013" after the earlier
@@ -1191,6 +1198,8 @@ function openImport(sheets){
       + (c.year ? '<option value="year"'+(c.role==='year'?' selected':'')+'>'+esc(T('Godina {0}', c.year))+'</option>' : '')
       + ROLES.map(([v,t]) => '<option value="'+v+'"'+(c.role===v?' selected':'')+'>'+esc(T(t))+'</option>').join('') + '</select></div>').join('') + '</div>';
     if(ex.years.length > 1) h += '<label class="check" style="font-size:.88rem"><input type="checkbox" data-f="hist"'+(it.hist?' checked':'')+'>'+esc(T('Istorija po godinama (jedan rezultat za svaku godinu)'))+'</label>';
+    const counted = it.an.cols.filter(c => c.inTotal && c.role === 'year');
+    if(counted.length) h += '<p class="prev">'+esc(T('Kolone {0} se računaju jer ih računa i tvoj zbir.', counted.map(c => c.head).join(', ')))+'</p>';
     const subs = it.an.cols.filter(c => c.sub && c.role === 'skip');
     if(subs.length) h += '<p class="prev">'+esc(T('Međuzbirovi se preskaču: {0}', subs.map(c => c.head).join(', ')))+'</p>';
     if(ex.hasTotal){
