@@ -248,7 +248,7 @@ const EN = {
   'Krug':'Round','poena':'points','Početno stanje (uvoz)':'Starting point (import)','Naziv':'Title','Izvođač':'Artist',
   'Poeni za {0}':'Points for {0}','U plejlisti':'In playlist','Pesma već postoji u ovoj listi.':'This song is already in the list.',
   'Dodaj':'Add','Unesi naziv pesme.':'Enter the song title.','Pozicija':'Position','Najviša':'Peak','Na #1':'At #1',
-  'U top {0}':'In top {0}','Ukupno':'Total','krugova':'rounds','Kretanje kroz krugove':'Position over rounds','Poeni po godinama':'Points per year',
+  'U top {0}':'In top {0}','Ukupno':'Total','Kretanje na listi':'Position on the chart','Poeni po godinama':'Points per year',
   'Izmeni':'Edit','Obrisati pesmu „{0}“?':'Delete the song “{0}”?','Pesma je obrisana':'Song deleted','Premesti u listu':'Move to list',
   'Sačuvano':'Saved','Podešavanja':'Settings','Jezik':'Language','Tema':'Theme','Automatski':'Automatic','Tamna':'Dark','Svetla':'Light',
   'Brza dugmad':'Quick buttons','Brojevi odvojeni zarezom, npr. 1, 2, 5':'Numbers separated by commas, e.g. 1, 2, 5','Podaci':'Data',
@@ -277,13 +277,18 @@ const EN = {
   'Kretanje se računa od prethodnog kruga.':'Movement is counted from the previous round.',
   'Lista po godini {0}. Kretanje je u odnosu na {1}.':'Chart for {0}. Movement is compared to {1}.',
   'Nova pesma':'New song','U krugu':'In round','Pokrenut':'Started','Poništi':'Undo','Sve godine':'All years','Tekuća godina':'Current year',
-  'Poslednjih {0} godina':'Last {0} years','međuzbir':'subtotal',
+  'Poslednjih {0} godina':'Last {0} years',
+  'Kraj {0}. godine':'End of {0}','Broj 1':'Number 1','Kretanje je u odnosu na kraj {0}. godine.':'Movement is compared to the end of {0}.',
+  'Lider liste na kraju godine':'Chart leader at the end of each year','zbir do te godine':'total up to that year',
+  'Istorija po godinama (jedan rezultat za svaku godinu)':'History by year (one result for every year)','Napravi istoriju po godinama':'Build history by year',
+  'Napraviti istoriju po godinama? Za svaku završenu godinu pravi se jedan rezultat, a tvoji krugovi ostaju.':'Build history by year? One result is made for every finished year; your rounds stay.',
+  'Godina u istoriji: {0}':'Years in history: {0}','međuzbir':'subtotal',
   'Međuzbirovi se preskaču: {0}':'Subtotals are skipped: {0}',
   'Statistika':'Stats','Pesme':'Songs','Svi poeni':'All points','Godina':'Years','Krugova':'Rounds','Poena u {0}':'Points in {0}',
   'Najjača godina: {0} ({1} poena).':'Best year: {0} ({1} points).','{0} u odnosu na {1}: {2}%.':'{0} compared to {1}: {2}%.',
   'Broj 1 svake godine':'Number 1 of every year','Top 10 izvođača':'Top 10 artists','Najviše pesama u top {0}':'Most songs in the top {0}',
   'Koliko vuče vrh liste':'How much the top carries','Top 10 ima {0}% svih poena':'The top 10 hold {0}% of all points','top {0} ima {1}%':'the top {0} hold {1}%',
-  'najviše poena u jednoj godini ({0})':'most points in one year ({0})','godina zaredom sa poenima':'years in a row with points','krugova na #1':'rounds at #1',
+  'najviše poena u jednoj godini ({0})':'most points in one year ({0})','godina zaredom sa poenima':'years in a row with points','puta na #1':'times at #1','najveći skok ({0})':'biggest climb ({0})','zaredom u top {0}':'in a row in the top {0}',
   'najviše u jednom krugu ({0})':'most in one round ({0})','Rekordi':'Records','Najverniji':'Most loyal','godina sa poenima':'years with points','broj godina':'number of years',
   'Najveći rast':'Biggest rise','Najveći pad':'Biggest drop','Novajlije u {0}':'Newcomers in {0}','Bez poena u {0}':'No points in {0}',
   'Na pragu top {0}':'Knocking on the top {0}','fali {0}':'{0} short','{0} od {1} pesama iz top {2} je u plejlisti.':'{0} of {1} songs in the top {2} are in the playlist.',
@@ -488,7 +493,7 @@ function listRows(l){
   if(below && !showAll) h += '<button class="cut" style="border:0" data-a="below">'+esc(T('Prikaži još {0} ispod crte', below))+'</button>';
   let note = '';
   if(period !== 'cur') note = T('Lista po godini {0}. Kretanje je u odnosu na {1}.', period, period-1);
-  else if(roundsOf(l.id).length) note = T('Kretanje se računa od prethodnog kruga.');
+  else if(roundsOf(l.id).length){ const lr = roundsOf(l.id).slice(-1)[0]; note = lr.auto ? T('Kretanje je u odnosu na kraj {0}. godine.', lr.year-1) : T('Kretanje se računa od prethodnog kruga.'); }
   else if(l.base && l.basePos) note = T('Pozicija je iz tabele, a kretanje se računa od nje.');
   if(note) h += '<p class="note" style="text-align:center;margin-top:12px">'+esc(note)+'</p>';
   return h;
@@ -524,7 +529,7 @@ function statsView(l){
     + '<div class="kpi"><b>'+artists.length+'</b><span>'+esc(T('Izvođači'))+'</span></div>'
     + '<div class="kpi"><b>'+fmt(allPts)+'</b><span>'+esc(T('Svi poeni'))+'</span></div>'
     + '<div class="kpi"><b>'+years.length+'</b><span>'+esc(T('Godina'))+(years.length ? ' ('+years[0]+'–'+String(lastY).slice(2)+')' : '')+'</span></div>'
-    + '<div class="kpi"><b>'+rs.length+'</b><span>'+esc(T('Krugova'))+'</span></div>'
+    + '<div class="kpi"><b>'+rs.filter(r => !r.auto).length+'</b><span>'+esc(T('Krugova'))+'</span></div>'
     + '<div class="kpi"><b>'+fmt(songs.reduce((a,s) => a + (+s.pts[CY()]||0), 0))+'</b><span>'+esc(T('Poena u {0}', CY()))+'</span></div></div>';
 
   // points per year
@@ -575,8 +580,13 @@ function statsView(l){
   if(longest && longest.b > 1) recs += recRow(longest.b, longest.s, T('godina zaredom sa poenima'));
   const r1 = {}; rs.forEach(r => { if(r.order[0]) r1[r.order[0]] = (r1[r.order[0]]||0) + 1; });
   const king = Object.entries(r1).sort((a,b) => b[1]-a[1])[0];
-  if(king && songById(king[0])) recs += recRow(king[1], songById(king[0]), T('krugova na #1'));
-  let bigAdd = null; rs.forEach(r => { for(const [id,v] of Object.entries(r.adds)) if(songById(id) && (!bigAdd || v > bigAdd.v)) bigAdd = { id, v, at:r.at }; });
+  if(king && songById(king[0])) recs += recRow(king[1]+'×', songById(king[0]), T('puta na #1'));
+  let jump = null; rs.forEach(r => { if(!r.prev.length) return; const pm = orderMap(r.prev); r.order.slice(0, N).forEach((id, i) => { const p = pm.get(id); if(p && songById(id) && (!jump || p-(i+1) > jump.d)) jump = { id, d:p-(i+1), r }; }); });
+  if(jump && jump.d > 0) recs += recRow('▲'+jump.d, songById(jump.id), T('najveći skok ({0})', roundLabel(jump.r)));
+  const stay = {}; rs.forEach(r => { const inTop = new Set(r.order.slice(0, N)); songs.forEach(s => { const c = stay[s.id] || { c:0, b:0 }; c.c = inTop.has(s.id) ? c.c+1 : 0; c.b = Math.max(c.b, c.c); stay[s.id] = c; }); });
+  const lng = Object.entries(stay).sort((a,b) => b[1].b-a[1].b)[0];
+  if(lng && lng[1].b > 1) recs += recRow(lng[1].b+'×', songById(lng[0]), T('zaredom u top {0}', N));
+  let bigAdd = null; rs.filter(r => !r.auto).forEach(r => { for(const [id,v] of Object.entries(r.adds)) if(songById(id) && (!bigAdd || v > bigAdd.v)) bigAdd = { id, v, at:r.at }; });
   if(bigAdd) recs += recRow('+'+fmt(bigAdd.v), songById(bigAdd.id), T('najviše u jednom krugu ({0})', fdate(bigAdd.at)));
   if(recs) h += card(T('Rekordi'), recs);
   if(loyal.length && loyal[0].n > 1) h += card(T('Najverniji'), loyal.map(x => recRow(x.n, x.s, T('godina sa poenima'))).join(''), T('broj godina'));
@@ -608,8 +618,14 @@ function statsView(l){
       + (miss.length ? '<h4>'+esc(T('Nedostaju u plejlisti'))+'</h4>' + miss.slice(0,10).map(s => recRow('#'+pos.get(s.id), s, '')).join('') + (miss.length > 10 ? '<p class="note">'+esc(T('i još {0}', miss.length-10))+'</p>' : '') : ''));
   }
 
+  // leaders at the end of each year
+  const autos = rs.filter(r => r.auto);
+  if(autos.length > 1){
+    h += card(T('Lider liste na kraju godine'), '<ul class="mini">' + autos.slice().reverse().map(r => { const t = songById(r.order[0]); return t ? '<li data-a="song" data-id="'+t.id+'" style="cursor:pointer"><span class="n">'+r.year+'</span><span class="x">'+esc(t.title)+' <small>'+esc(t.artist)+'</small></span><span class="r">'+fmt(scoreUpTo(t, l, r.year))+'</span></li>' : ''; }).join('') + '</ul>', T('zbir do te godine'));
+  }
   // rounds
-  if(rs.length){
+  const own = rs.filter(r => !r.auto);
+  if(own.length){ const rs = own;
     const sums = rs.map(r => Object.values(r.adds).reduce((a,b) => a+b, 0)), tot = sums.reduce((a,b) => a+b, 0);
     const days = rs.length > 1 ? Math.round((new Date(rs[rs.length-1].at) - new Date(rs[0].at)) / 864e5 / (rs.length-1)) : null;
     h += card(T('Krugovi'), '<div class="kpis" style="margin:8px 0 0"><div class="kpi"><b>'+fmt(tot)+'</b><span>'+esc(T('poena ukupno'))+'</span></div><div class="kpi"><b>'+fmt(tot/rs.length)+'</b><span>'+esc(T('prosek po krugu'))+'</span></div><div class="kpi"><b>'+(days != null ? days : '—')+'</b><span>'+esc(T('dana između krugova'))+'</span></div></div>'
@@ -622,14 +638,49 @@ function historyView(l){
   const rs = roundsOf(l.id).slice().reverse();
   let h = '';
   if(!rs.length) h += '<div class="empty">'+esc(T('Još nema krugova. Pokreni prvi krug dugmetom „Novi krug“.'))+'</div>';
-  rs.forEach((r, i) => {
+  let k = rs.filter(r => !r.auto).length;
+  rs.forEach(r => {
     const n = Object.keys(r.adds).length, sum = Object.values(r.adds).reduce((a,b) => a+b, 0), one = songById(r.order[0]);
-    h += '<div class="card hist" data-a="round" data-id="'+r.id+'"><div class="d"><b>'+esc(T('Krug'))+' '+(rs.length-i)+' · '+fdate(r.at)+'</b><span>'+r.year+'</span></div>'
+    const title = r.auto ? T('Kraj {0}. godine', r.year) : T('Krug')+' '+(k--)+' · '+fdate(r.at);
+    h += '<div class="card hist" data-a="round" data-id="'+r.id+'"><div class="d"><b>'+esc(title)+'</b><span>'+r.year+'</span></div>'
       + '<p>+'+fmt(sum)+' '+esc(T('poena'))+' · '+n+' '+esc(T('pesama'))+(one ? ' · #1 '+esc(one.title) : '')+'</p></div>';
   });
   if(l.base) h += '<div class="card"><h3>'+esc(T('Početno stanje (uvoz)'))+'</h3><p>'+(l.created ? fdate(l.created) : '')+'</p></div>';
   return h;
 }
+
+/* ================= yearly history =================
+   One result per finished year: the standing at the end of that year (points up to then),
+   stored like a round (auto:true) so movement, peaks, #1s and charts work across years. */
+function scoreUpTo(s, l, Y){
+  let t = 0;
+  for(const y in s.pts){
+    const yy = +y, v = +s.pts[y] || 0; if(yy > Y) continue;
+    if(l.rank === 'year'){ if(yy === Y) t += v; }
+    else if(l.rank === 'last'){ if(yy > Y - (l.lastN||3)) t += v; }
+    else t += v;
+  }
+  return t;
+}
+function standingAt(l, Y, tie){
+  return songsOf(l.id).filter(s => Object.keys(s.pts).some(y => +y <= Y && +s.pts[y]))
+    .map(s => ({ s, sc:scoreUpTo(s, l, Y), p:tie.get(s.id) ?? 1e9 }))
+    .sort((a,b) => b.sc-a.sc || a.p-b.p || a.s.title.localeCompare(b.s.title)).map(x => x.s.id);
+}
+function buildYearHistory(l){
+  const own = roundsOf(l.id).filter(r => !r.auto), ys = yearsOf(l).filter(y => y < CY());
+  let prev = [];
+  const auto = ys.map(y => {
+    const order = standingAt(l, y, orderMap(prev)), adds = {};
+    songsOf(l.id).forEach(s => { if(+s.pts[y]) adds[s.id] = +s.pts[y]; });
+    const r = { id:uid(), list:l.id, at:new Date(y, 11, 31, 12).toISOString(), year:y, adds, prev, order, auto:true };
+    prev = order; return r;
+  });
+  data.rounds = [...data.rounds.filter(r => r.list !== l.id), ...auto, ...own];
+  if(auto.length){ l.base = null; l.basePos = false; }
+  return auto.length;
+}
+const roundLabel = r => r.auto ? String(r.year) : fdate(r.at);
 
 /* ================= round ================= */
 function roundRowsOrder(l){
@@ -711,8 +762,8 @@ function showRound(r, fresh){
   const moves = r.order.slice(0,N).filter(id => live(id) && (pm.get(id)||1e9) <= N).map(id => ({ id, d:pm.get(id) - om.get(id) }));
   const ups = moves.filter(m => m.d > 0).sort((a,b) => b.d-a.d).slice(0,5), dns = moves.filter(m => m.d < 0).sort((a,b) => a.d-b.d).slice(0,5);
   const sum = Object.values(r.adds).reduce((a,b) => a+b, 0), one = live(r.order[0]);
-  let h = '<h2>'+esc(fresh ? T('Nova lista je spremna') : T('Krug')+' '+(idx+1))+'</h2><p class="sub">'+fdate(r.at)+' · '+r.year+' · +'+fmt(sum)+' '+esc(T('poena'))+' · '+Object.keys(r.adds).length+' '+esc(T('pesama'))+'</p>';
-  if(one) h += '<div class="hero"><small>'+esc(r.prev[0] === r.order[0] ? T('Broj 1 i dalje') : T('Novi broj 1'))+'</small><b>'+esc(one.title)+'</b><span>'+esc(one.artist)+'</span></div>';
+  let h = '<h2>'+esc(fresh ? T('Nova lista je spremna') : r.auto ? T('Kraj {0}. godine', r.year) : T('Krug')+' '+(rs.filter(x => !x.auto).indexOf(r)+1))+'</h2><p class="sub">'+(r.auto ? '' : fdate(r.at)+' · ')+r.year+' · +'+fmt(sum)+' '+esc(T('poena'))+' · '+Object.keys(r.adds).length+' '+esc(T('pesama'))+'</p>';
+  if(one) h += '<div class="hero"><small>'+esc(!r.prev.length ? T('Broj 1') : r.prev[0] === r.order[0] ? T('Broj 1 i dalje') : T('Novi broj 1'))+'</small><b>'+esc(one.title)+'</b><span>'+esc(one.artist)+'</span></div>';
   const li = (arr, fn) => '<ul class="mini">'+arr.map(fn).join('')+'</ul>';
   if(ins.length) h += '<h4>'+esc(T('Ušle u top {0}', N))+'</h4>' + li(ins, id => '<li><span class="n">'+om.get(id)+'</span>'+name(id)+'<span class="r">'+(ever.has(id) ? '<span class="badge re">RE</span>' : '<span class="badge new">NEW</span>')+'</span></li>');
   if(ups.length) h += '<h4>'+esc(T('Najveći skokovi'))+'</h4>' + li(ups, m => '<li><span class="n">'+om.get(m.id)+'</span>'+name(m.id)+'<span class="r mv up">▲'+m.d+'</span></li>');
@@ -721,7 +772,7 @@ function showRound(r, fresh){
   const addIds = Object.keys(r.adds).filter(live).sort((a,b) => r.adds[b]-r.adds[a]);
   if(addIds.length) h += '<h4>'+esc(T('Poeni'))+'</h4>' + li(addIds, id => '<li><span class="n">'+om.get(id)+'</span>'+name(id)+'<span class="r">+'+fmt(r.adds[id])+'</span></li>');
   h += '<div class="stack mt"><button class="btn primary block" data-a="close">'+esc(T('U redu'))+'</button>';
-  if(idx === rs.length-1) h += '<button class="btn danger block" data-a="undoRound" data-id="'+r.id+'">'+esc(T('Poništi ovaj krug'))+'</button>';
+  if(idx === rs.length-1 && !r.auto) h += '<button class="btn danger block" data-a="undoRound" data-id="'+r.id+'">'+esc(T('Poništi ovaj krug'))+'</button>';
   h += '</div>';
   openSheet(h);
 }
@@ -815,14 +866,15 @@ function openSong(id){
   const N = l.size || 100, cur = ranked(l).findIndex(x => x.id === id) + 1;
   const pts = []; let peak = cur, ones = 0, inTop = 0;
   if(l.base && l.base[id]){ pts.push({ p:+l.base[id], label:T('Uvoz') }); peak = Math.min(peak, +l.base[id]); }
-  roundsOf(l.id).forEach(r => { const i = r.order.indexOf(id); if(i < 0) return; const p = i+1; pts.push({ p, label:fdate(r.at) }); peak = Math.min(peak, p); if(p === 1) ones++; if(p <= N) inTop++; });
+  if(roundsOf(l.id).some(r => r.auto)) pts.length = 0;
+  roundsOf(l.id).forEach(r => { const i = r.order.indexOf(id); if(i < 0) return; const p = i+1; pts.push({ p, label:roundLabel(r) }); peak = Math.min(peak, p); if(p === 1) ones++; if(p <= N) inTop++; });
   const rs = roundsOf(l.id);
   const years = yearsOf(l, true);
   let h = '<h2>'+esc(s.title)+'</h2><p class="sub">'+esc(s.artist)+' · '+esc(l.name)+'</p>'
     + '<div class="tiles"><div class="tile"><b>#'+cur+'</b><span>'+esc(T('Pozicija'))+'</span></div><div class="tile"><b>#'+peak+'</b><span>'+esc(T('Najviša'))+'</span></div><div class="tile"><b>'+fmt(total(s))+'</b><span>'+esc(T('Ukupno'))+'</span></div></div>'
-    + (rs.length ? '<div class="tiles"><div class="tile"><b>'+ones+'</b><span>'+esc(T('Na #1'))+' ('+esc(T('krugova'))+')</span></div><div class="tile"><b>'+inTop+'</b><span>'+esc(T('U top {0}', N))+'</span></div><div class="tile"><b>'+fmt(+s.pts[CY()]||0)+'</b><span>'+CY()+'</span></div></div>' : '');
+    + (rs.length ? '<div class="tiles"><div class="tile"><b>'+ones+'×</b><span>'+esc(T('Na #1'))+'</span></div><div class="tile"><b>'+inTop+'×</b><span>'+esc(T('U top {0}', N))+'</span></div><div class="tile"><b>'+fmt(+s.pts[CY()]||0)+'</b><span>'+CY()+'</span></div></div>' : '');
   const pc = posChart(pts, N);
-  if(pc) h += '<h4>'+esc(T('Kretanje kroz krugove'))+'</h4>'+pc;
+  if(pc) h += '<h4>'+esc(T('Kretanje na listi'))+'</h4>'+pc;
   const bc = barChart(s, years);
   if(bc) h += '<h4>'+esc(T('Poeni po godinama'))+'</h4>'+bc;
   h += '<h4>'+esc(T('Izmeni'))+'</h4><label class="lbl">'+esc(T('Naziv'))+'</label><input class="field" id="eT" value="'+esc(s.title)+'"><label class="lbl">'+esc(T('Izvođač'))+'</label><input class="field" id="eA" value="'+esc(s.artist)+'">'
@@ -881,7 +933,7 @@ function listSettings(){
     + '<div id="lNw"'+(l.rank==='last'?'':' class="hide"')+'><label class="lbl">'+esc(T('Broj godina'))+'</label><input class="field" id="lY" type="number" inputmode="numeric" value="'+(l.lastN||3)+'"></div>'
     + '<label class="check"><input type="checkbox" id="lP"'+(l.showPl?' checked':'')+'>'+esc(T('Prikaži kolonu plejliste'))+'</label>'
     + '<div class="two mt"><button class="btn" data-a="close">'+esc(T('Otkaži'))+'</button><button class="btn primary" id="lOk">'+esc(T('Sačuvaj'))+'</button></div>'
-    + '<div class="stack mt"><button class="btn block" id="lX">'+esc(T('Izvezi u [[Excel]]'))+'</button><button class="btn danger block" id="lDel">'+esc(T('Obriši listu'))+'</button></div>', el => {
+    + '<div class="stack mt"><button class="btn block" id="lH">'+esc(T('Napravi istoriju po godinama'))+'</button><button class="btn block" id="lX">'+esc(T('Izvezi u [[Excel]]'))+'</button><button class="btn danger block" id="lDel">'+esc(T('Obriši listu'))+'</button></div>', el => {
     el.querySelector('#lR').onchange = e => el.querySelector('#lNw').classList.toggle('hide', e.target.value !== 'last');
     el.querySelector('#lOk').onclick = () => {
       const name = el.querySelector('#lN').value.trim(); if(!name){ toast(T('Unesi naziv liste.')); return; }
@@ -890,6 +942,10 @@ function listSettings(){
       save(); closeSheet(); render(); toast(T('Sačuvano'));
     };
     el.querySelector('#lX').onclick = () => exportXlsx([l]);
+    el.querySelector('#lH').onclick = async () => {
+      if(!await confirmSheet(T('Napraviti istoriju po godinama? Za svaku završenu godinu pravi se jedan rezultat, a tvoji krugovi ostaju.'), T('Napravi'), false)) return;
+      const n = buildYearHistory(l); save(); render(); toast(T('Godina u istoriji: {0}', n));
+    };
     el.querySelector('#lDel').onclick = async () => {
       if(!await confirmSheet(T('Obrisati listu „{0}“ sa svim pesmama i istorijom?', l.name), T('Obriši'))) return;
       data.lists = data.lists.filter(x => x !== l); data.songs = data.songs.filter(s => s.list !== l.id); data.rounds = data.rounds.filter(r => r.list !== l.id);
@@ -1105,7 +1161,7 @@ function pickImportFile(){
 function openImport(sheets){
   const items = sheets.map(sh => {
     const an = analyze(sh.rows), ex = extract(an), same = data.lists.find(l => norm(l.name) === norm(sh.name));
-    return { sh, an, ex, on:!sh.hidden && ex.recs.length > 0, name:sh.name, target:same ? same.id : 'new' };
+    return { sh, an, ex, on:!sh.hidden && ex.recs.length > 0, name:sh.name, target:same ? same.id : 'new', hist:true };
   });
   /* Yearly copies of the same list ("World 100 2024", "World 100 2025"): each holds all years up to
      then, so only the newest is imported, named without the year. */
@@ -1134,6 +1190,7 @@ function openImport(sheets){
     h += '<div class="cols mt">' + it.an.cols.filter(c => c.head || c.sample).map(c => '<div class="col'+(c.role==='skip'?' skip':'')+'"><div class="h">'+esc(c.head || '('+String.fromCharCode(65 + (c.i % 26))+')')+'</div><div class="v">'+esc(c.sub ? T('međuzbir') : (c.sample || '—'))+'</div><select class="field" data-col="'+c.i+'">'
       + (c.year ? '<option value="year"'+(c.role==='year'?' selected':'')+'>'+esc(T('Godina {0}', c.year))+'</option>' : '')
       + ROLES.map(([v,t]) => '<option value="'+v+'"'+(c.role===v?' selected':'')+'>'+esc(T(t))+'</option>').join('') + '</select></div>').join('') + '</div>';
+    if(ex.years.length > 1) h += '<label class="check" style="font-size:.88rem"><input type="checkbox" data-f="hist"'+(it.hist?' checked':'')+'>'+esc(T('Istorija po godinama (jedan rezultat za svaku godinu)'))+'</label>';
     const subs = it.an.cols.filter(c => c.sub && c.role === 'skip');
     if(subs.length) h += '<p class="prev">'+esc(T('Međuzbirovi se preskaču: {0}', subs.map(c => c.head).join(', ')))+'</p>';
     if(ex.hasTotal){
@@ -1152,6 +1209,7 @@ function openImport(sheets){
       const box = e.target.closest('.imp'); if(!box) return;
       const it = items[+box.dataset.k], f = e.target.dataset.f;
       if(f === 'on') it.on = e.target.checked;
+      else if(f === 'hist') it.hist = e.target.checked;
       else if(f === 'target') it.target = e.target.value;
       else if(e.target.dataset.col != null){
         const c = it.an.cols[+e.target.dataset.col], role = e.target.value;
@@ -1166,7 +1224,7 @@ function openImport(sheets){
       const chosen = items.filter(it => it.on && it.ex.recs.length);
       if(!chosen.length){ toast(T('Ništa nije izabrano.')); return; }
       let n = 0, first = null;
-      chosen.forEach(it => { const l = applyImport(it); n += it.ex.recs.length; first = first || l; });
+      chosen.forEach(it => { const l = applyImport(it); if(it.hist && it.ex.years.length > 1) buildYearHistory(l); n += it.ex.recs.length; first = first || l; });
       data.cur = first.id; ui.view = 'list'; ui.period = 'cur'; ui.q = '';
       save(); closeSheet(); render(); toast(T('Uvezeno: {0} pesama u {1} lista', n, chosen.length));
     };
