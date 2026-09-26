@@ -282,7 +282,10 @@ const EN = {
   'Lider liste na kraju godine':'Chart leader at the end of each year','zbir do te godine':'total up to that year',
   'Istorija po godinama (jedan rezultat za svaku godinu)':'History by year (one result for every year)','Napravi istoriju po godinama':'Build history by year',
   'Napraviti istoriju po godinama? Za svaku završenu godinu pravi se jedan rezultat, a tvoji krugovi ostaju.':'Build history by year? One result is made for every finished year; your rounds stay.',
-  'Godina u istoriji: {0}':'Years in history: {0}','međuzbir':'subtotal','Obriši sve liste':'Delete all lists','Obriši sve':'Delete all','Sve liste su obrisane':'All lists deleted',
+  'Godina u istoriji: {0}':'Years in history: {0}','međuzbir':'subtotal',
+  'Ne pravi novu listu: daje stanje liste „{0}“ na kraju {1}. za istoriju i statistiku.':'Does not make a new list: gives the standing of “{0}” at the end of {1} for history and stats.',
+  'Uskladi sa zbirom iz tabele (razlika se čuva kao poeni bez godine)':'Match the sheet’s total (the difference is kept as points without a year)',
+  'Još {0} poena iz zbira tabele nemaju godinu.':'{0} more points from the sheet’s total have no year.','Obriši sve liste':'Delete all lists','Obriši sve':'Delete all','Sve liste su obrisane':'All lists deleted',
   'Obrisati sve liste, pesme i istoriju? Podešavanja ostaju. Ovo ne može da se vrati.':'Delete all lists, songs and history? Settings stay. This cannot be undone.','Kolone {0} se računaju jer ih računa i tvoj zbir.':'Columns {0} are counted because your total counts them too.',
   'Međuzbirovi se preskaču: {0}':'Subtotals are skipped: {0}',
   'Statistika':'Stats','Pesme':'Songs','Svi poeni':'All points','Godina':'Years','Krugova':'Rounds','Poena u {0}':'Points in {0}',
@@ -295,8 +298,7 @@ const EN = {
   'Na pragu top {0}':'Knocking on the top {0}','fali {0}':'{0} short','{0} od {1} pesama iz top {2} je u plejlisti.':'{0} of {1} songs in the top {2} are in the playlist.',
   'Nedostaju u plejlisti':'Missing from the playlist','i još {0}':'and {0} more','Krugovi':'Rounds','poena ukupno':'points in total','prosek po krugu':'average per round',
   'dana između krugova':'days between rounds','Prvi krug {0}, poslednji {1}':'First round {0}, last {1}',
-  '[[PDF]] i slike ne mogu da se uvezu. Preuzmi tabelu kao [[Microsoft Excel (.xlsx)]].':'[[PDF]] files and images cannot be imported. Download the sheet as [[Microsoft Excel (.xlsx)]].',
-  'Starija kopija iste liste, zato je isključena. Najnoviji list već ima sve godine.':'Older copy of the same list, so it is turned off. The newest sheet already has all years.'
+  '[[PDF]] i slike ne mogu da se uvezu. Preuzmi tabelu kao [[Microsoft Excel (.xlsx)]].':'[[PDF]] files and images cannot be imported. Download the sheet as [[Microsoft Excel (.xlsx)]].'
 };
 const TR_L = {'Lj':'Љ','LJ':'Љ','lj':'љ','Nj':'Њ','NJ':'Њ','nj':'њ','Dž':'Џ','DŽ':'Џ','dž':'џ'};
 const TR_1 = {a:'а',b:'б',v:'в',g:'г',d:'д',đ:'ђ',e:'е',ž:'ж',z:'з',i:'и',j:'ј',k:'к',l:'л',m:'м',n:'н',o:'о',p:'п',r:'р',s:'с',t:'т',ć:'ћ',u:'у',f:'ф',h:'х',c:'ц',č:'ч',š:'ш'};
@@ -367,7 +369,8 @@ function curList(){ return listById(data.cur) || data.lists[0] || null; }
 const songsOf = id => data.songs.filter(s => s.list === id);
 const songById = id => data.songs.find(s => s.id === id);
 const roundsOf = id => data.rounds.filter(r => r.list === id);
-const total = s => { let t = 0; for(const y in s.pts) t += +s.pts[y] || 0; return t; };
+/* extra: points the sheet's own total has but no year column explains (kept so totals match the sheet). */
+const total = s => { let t = +s.extra || 0; for(const y in s.pts) t += +s.pts[y] || 0; return t; };
 function yearsOf(l, withCur){
   const ys = new Set(); songsOf(l.id).forEach(s => { for(const y in s.pts) if(+s.pts[y]) ys.add(+y); });
   if(withCur) ys.add(CY());
@@ -395,7 +398,7 @@ function ranked(l, period = 'cur', tie){
   }
   tie = tie || (period === 'cur' ? standing(l) : new Map());
   let arr = songsOf(l.id).map(s => ({ s, sc:score(s,l,period), t:total(s), p:tie.get(s.id) ?? 1e9 }));
-  if(period !== 'cur') arr = arr.filter(x => Object.keys(x.s.pts).some(y => +y <= period && +x.s.pts[y]));
+  if(period !== 'cur') arr = arr.filter(x => +x.s.extra || Object.keys(x.s.pts).some(y => +y <= period && +x.s.pts[y]));
   arr.sort((a,b) => b.sc-a.sc || b.t-a.t || a.p-b.p || a.s.title.localeCompare(b.s.title));
   return arr.map(x => x.s);
 }
@@ -659,7 +662,7 @@ function historyView(l){
    One result per finished year: the standing at the end of that year (points up to then),
    stored like a round (auto:true) so movement, peaks, #1s and charts work across years. */
 function scoreUpTo(s, l, Y){
-  let t = 0;
+  let t = (!l.rank || l.rank === 'total') ? +s.extra || 0 : 0;
   for(const y in s.pts){
     const yy = +y, v = +s.pts[y] || 0; if(yy > Y) continue;
     if(l.rank === 'year'){ if(yy === Y) t += v; }
@@ -669,7 +672,7 @@ function scoreUpTo(s, l, Y){
   return t;
 }
 function standingAt(l, Y, tie){
-  return songsOf(l.id).filter(s => Object.keys(s.pts).some(y => +y <= Y && +s.pts[y]))
+  return songsOf(l.id).filter(s => +s.extra || Object.keys(s.pts).some(y => +y <= Y && +s.pts[y]))
     .map(s => ({ s, sc:scoreUpTo(s, l, Y), p:tie.get(s.id) ?? 1e9 }))
     .sort((a,b) => b.sc-a.sc || a.p-b.p || a.s.title.localeCompare(b.s.title)).map(x => x.s.id);
 }
@@ -886,6 +889,7 @@ function openSong(id){
   h += '<h4>'+esc(T('Izmeni'))+'</h4><label class="lbl">'+esc(T('Naziv'))+'</label><input class="field" id="eT" value="'+esc(s.title)+'"><label class="lbl">'+esc(T('Izvođač'))+'</label><input class="field" id="eA" value="'+esc(s.artist)+'">'
     + (l.showPl ? '<label class="check"><input type="checkbox" id="ePl"'+(s.pl?' checked':'')+'>'+esc(T('U plejlisti'))+'</label>' : '')
     + '<label class="lbl">'+esc(T('Poeni po godinama'))+'</label><div class="years">' + years.slice().reverse().map(y => '<label><span>'+y+'</span><input type="number" inputmode="decimal" data-y="'+y+'" value="'+(s.pts[y] != null ? s.pts[y] : '')+'" placeholder="0"></label>').join('') + '</div>'
+    + (+s.extra ? '<p class="note" style="margin-top:8px">'+esc(T('Još {0} poena iz zbira tabele nemaju godinu.', fmt(s.extra)))+'</p>' : '')
     + (data.lists.length > 1 ? '<label class="lbl">'+esc(T('Premesti u listu'))+'</label><select class="field" id="eL">'+data.lists.map(x => '<option value="'+x.id+'"'+(x.id===l.id?' selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select>' : '')
     + '<div class="two mt"><button class="btn danger" id="eDel">'+esc(T('Obriši'))+'</button><button class="btn primary" id="eOk">'+esc(T('Sačuvaj'))+'</button></div>';
   openSheet(h, el => {
@@ -1158,7 +1162,7 @@ function extract(an){
     const pts = {}; let sum = 0;
     yc.forEach(c => { const v = numv(r[c.i]); if(v){ pts[c.year] = (pts[c.year]||0) + v; sum += v; years.add(c.year); } });
     const rec = { title, artist:ac ? String(r[ac.i] ?? '').trim() : '', pts, pos:pc ? numv(r[pc.i]) : null, pl:lc ? YES.test(norm(r[lc.i])) : null };
-    if(zc){ const z = numv(r[zc.i]); if(z != null && Math.abs(z - sum) > .001) bad.push({ rec, z, sum }); }
+    if(zc){ const z = numv(r[zc.i]); if(z != null){ rec.z = z; if(Math.abs(z - sum) > .001){ rec.extra = Math.round((z - sum) * 100) / 100; bad.push({ rec, z, sum }); } } }
     recs.push(rec);
   });
   return { recs, years:[...years].sort((a,b) => a-b), bad, hasPos:!!pc, hasTotal:!!zc, hasPl:!!lc };
@@ -1191,7 +1195,7 @@ function openImport(sheets){
     if(g.length < 2) return;
     g.sort((a,b) => b.y-a.y);
     const newest = g.find(x => x.it.ex.recs.length && !x.it.sh.hidden) || g[0];
-    g.forEach(x => { if(x !== newest){ x.it.on = false; x.it.copy = true; } });
+    g.forEach(x => { if(x !== newest){ x.it.copy = true; x.it.copyOf = newest.it; x.it.copyYear = x.y; x.it.on = x.it.on && x.y < newest.y; } });
     newest.it.name = newest.base;
     const same = data.lists.find(l => norm(l.name) === norm(newest.base)); if(same) newest.it.target = same.id;
   });
@@ -1200,19 +1204,20 @@ function openImport(sheets){
     const ex = it.ex;
     let h = '<div class="imp'+(it.on?'':' off')+'" data-k="'+k+'"><div class="hd"><input type="checkbox" data-f="on"'+(it.on?' checked':'')+'><input class="field" data-f="name" value="'+esc(it.name)+'"></div>';
     h += '<p class="prev">'+esc(T('{0} pesama', ex.recs.length))+' · '+esc(ex.years.length ? T('godine {0}', ex.years[0] + (ex.years.length > 1 ? '–' + ex.years[ex.years.length-1] : '')) : T('Nema godina'))+(it.sh.hidden ? ' · '+esc(T('Sakriven list')) : '')+'</p>';
-    if(it.copy) h += '<p class="prev">'+esc(T('Starija kopija iste liste, zato je isključena. Najnoviji list već ima sve godine.'))+'</p>';
+    if(it.copy) h += '<p class="ok">'+esc(T('Ne pravi novu listu: daje stanje liste „{0}“ na kraju {1}. za istoriju i statistiku.', it.copyOf.name, it.copyYear))+'</p>';
     if(!it.on && !ex.recs.length){ h += '<p class="warn">'+esc(T('Nema kolone sa nazivom pesme.'))+'</p>'; }
-    h += '<label class="lbl">'+esc(T('Uvezi u'))+'</label><select class="field" data-f="target"><option value="new">'+esc(T('nova lista'))+'</option>' + data.lists.map(l => '<option value="'+l.id+'"'+(it.target===l.id?' selected':'')+'>'+esc(T('spoji sa „{0}“', l.name))+'</option>').join('') + '</select>';
+    if(!it.copy) h += '<label class="lbl">'+esc(T('Uvezi u'))+'</label><select class="field" data-f="target"><option value="new">'+esc(T('nova lista'))+'</option>' + data.lists.map(l => '<option value="'+l.id+'"'+(it.target===l.id?' selected':'')+'>'+esc(T('spoji sa „{0}“', l.name))+'</option>').join('') + '</select>';
     h += '<div class="cols mt">' + it.an.cols.filter(c => c.head || c.sample).map(c => '<div class="col'+(c.role==='skip'?' skip':'')+'"><div class="h">'+esc(c.head || '('+String.fromCharCode(65 + (c.i % 26))+')')+'</div><div class="v">'+esc(c.sub ? T('međuzbir') : (c.sample || '—'))+'</div><select class="field" data-col="'+c.i+'">'
       + (c.year ? '<option value="year"'+(c.role==='year'?' selected':'')+'>'+esc(T('Godina {0}', c.year))+'</option>' : '')
       + ROLES.map(([v,t]) => '<option value="'+v+'"'+(c.role===v?' selected':'')+'>'+esc(T(t))+'</option>').join('') + '</select></div>').join('') + '</div>';
-    if(ex.years.length > 1) h += '<label class="check" style="font-size:.88rem"><input type="checkbox" data-f="hist"'+(it.hist?' checked':'')+'>'+esc(T('Istorija po godinama (jedan rezultat za svaku godinu)'))+'</label>';
+    if(ex.years.length > 1 && !it.copy) h += '<label class="check" style="font-size:.88rem"><input type="checkbox" data-f="hist"'+(it.hist?' checked':'')+'>'+esc(T('Istorija po godinama (jedan rezultat za svaku godinu)'))+'</label>';
     const counted = it.an.cols.filter(c => c.inTotal && c.role === 'year');
     if(counted.length) h += '<p class="prev">'+esc(T('Kolone {0} se računaju jer ih računa i tvoj zbir.', counted.map(c => c.head).join(', ')))+'</p>';
     const subs = it.an.cols.filter(c => c.sub && c.role === 'skip');
     if(subs.length) h += '<p class="prev">'+esc(T('Međuzbirovi se preskaču: {0}', subs.map(c => c.head).join(', ')))+'</p>';
     if(ex.hasTotal){
       h += ex.bad.length ? '<div class="warn"><details><summary>'+esc(T('Zbir se ne slaže u {0} redova', ex.bad.length))+'</summary><ul>' + ex.bad.slice(0,30).map(b => '<li>'+esc(b.rec.title)+': '+esc(T('tabela kaže {0}, godine daju {1}', fmt(b.z), fmt(b.sum)))+'</li>').join('') + '</ul></details></div>'
+          + (it.copy ? '' : '<label class="check" style="font-size:.88rem"><input type="checkbox" data-f="align"'+(it.align !== false ? ' checked' : '')+'>'+esc(T('Uskladi sa zbirom iz tabele (razlika se čuva kao poeni bez godine)'))+'</label>')
         : (ex.recs.length ? '<div class="ok">'+esc(T('Zbir se slaže u svim redovima'))+' ✓</div>' : '');
     }
     const top = ex.recs.map(r => ({ r, t:Object.values(r.pts).reduce((a,b) => a+b, 0) })).sort((a,b) => b.t-a.t).slice(0,3);
@@ -1228,6 +1233,7 @@ function openImport(sheets){
       const it = items[+box.dataset.k], f = e.target.dataset.f;
       if(f === 'on') it.on = e.target.checked;
       else if(f === 'hist') it.hist = e.target.checked;
+      else if(f === 'align') it.align = e.target.checked;
       else if(f === 'target') it.target = e.target.value;
       else if(e.target.dataset.col != null){
         const c = it.an.cols[+e.target.dataset.col], role = e.target.value;
@@ -1241,10 +1247,13 @@ function openImport(sheets){
     el.querySelector('#impOk').onclick = () => {
       const chosen = items.filter(it => it.on && it.ex.recs.length);
       if(!chosen.length){ toast(T('Ništa nije izabrano.')); return; }
-      let n = 0, first = null;
-      chosen.forEach(it => { const l = applyImport(it); if(it.hist && it.ex.years.length > 1) buildYearHistory(l); n += it.ex.recs.length; first = first || l; });
+      let n = 0, first = null, lists = 0;
+      const made = new Map();
+      chosen.filter(it => !it.copy || !it.copyOf.on).forEach(it => { const l = applyImport(it); made.set(it, l); if(it.hist && it.ex.years.length > 1) buildYearHistory(l); n += it.ex.recs.length; lists++; first = first || l; });
+      chosen.filter(it => it.copy && it.copyOf.on).forEach(it => applySnapshot(made.get(it.copyOf), it));
+      made.forEach(l => relinkHistory(l));
       data.cur = first.id; ui.view = 'list'; ui.period = 'cur'; ui.q = '';
-      save(); closeSheet(); render(); toast(T('Uvezeno: {0} pesama u {1} lista', n, chosen.length));
+      save(); closeSheet(); render(); toast(T('Uvezeno: {0} pesama u {1} lista', n, lists));
     };
   });
 }
@@ -1256,6 +1265,7 @@ function applyImport(it){
     const base = {};
     ex.recs.forEach(r => {
       const s = { id:uid(), list:l.id, title:r.title, artist:r.artist, pts:r.pts, pl:!!r.pl, added:new Date().toISOString() };
+      if(r.extra && it.align !== false) s.extra = r.extra;
       data.songs.push(s);
       if(r.pos != null && r.pos > 0) base[s.id] = Math.round(r.pos);
     });
@@ -1266,10 +1276,35 @@ function applyImport(it){
   const l = listById(it.target), idx = new Map(songsOf(l.id).map(s => [songKey(s), s]));
   ex.recs.forEach(r => {
     const s = idx.get(songKey(r));
-    if(s){ Object.assign(s.pts, r.pts); if(r.pl != null) s.pl = r.pl; }
+    if(s){ Object.assign(s.pts, r.pts); if(r.pl != null) s.pl = r.pl; if(it.align !== false) { if(r.extra) s.extra = r.extra; else delete s.extra; } }
     else data.songs.push({ id:uid(), list:l.id, title:r.title, artist:r.artist, pts:r.pts, pl:!!r.pl, added:new Date().toISOString() });
   });
   return l;
+}
+
+/* An older yearly copy of a sheet ("YU 100 2017") gives the real standing at the end of that year:
+   ranked by that sheet's own total. It replaces the computed standing for that year in the history. */
+function applySnapshot(l, it){
+  if(!l) return;
+  const idx = new Map(songsOf(l.id).map(s => [songKey(s), s.id])), Y = it.copyYear;
+  const rows = it.ex.recs.map(r => ({ id:idx.get(songKey(r)), t:r.z != null ? r.z : Object.values(r.pts).reduce((a,b) => a+b, 0) })).filter(x => x.id);
+  rows.sort((a,b) => b.t-a.t);
+  const order = rows.map(x => x.id), seen = new Set(order);
+  let r = roundsOf(l.id).find(x => x.auto && x.year === Y);
+  if(!r){
+    const adds = {}; songsOf(l.id).forEach(s => { if(+s.pts[Y]) adds[s.id] = +s.pts[Y]; });
+    r = { id:uid(), list:l.id, at:new Date(Y, 11, 31, 12).toISOString(), year:Y, adds, prev:[], order:[], auto:true };
+    data.rounds.push(r);
+  }
+  r.order = [...order, ...r.order.filter(id => !seen.has(id))];
+  r.sheet = true;
+}
+/* Keep a list's yearly results in year order, each compared with the year before; own rounds follow. */
+function relinkHistory(l){
+  const autos = roundsOf(l.id).filter(r => r.auto).sort((a,b) => a.year-b.year), own = roundsOf(l.id).filter(r => !r.auto);
+  autos.forEach((r, i) => { r.prev = i ? autos[i-1].order : []; });
+  data.rounds = [...data.rounds.filter(r => r.list !== l.id), ...autos, ...own];
+  if(autos.length){ l.base = null; l.basePos = false; }
 }
 
 /* ================= export ================= */
