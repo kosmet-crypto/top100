@@ -1081,6 +1081,9 @@ const numv = s => { s = String(s ?? '').trim().replace(/\s/g,''); if(!s) return 
 const yearOf = h => {
   h = String(h).trim(); if(h.length > 16) return null;
   const m = /^((?:19|20)\d\d)(?:\.0*)?\.?$/.exec(h); if(m) return +m[1];
+  // Two years in one column ("18/19", "2018/19", "2018-2019"): counted in the later year.
+  const r = /^((?:19|20)?\d\d)\s*[\/\-–]\s*((?:19|20)?\d\d)\.?$/.exec(h);
+  if(r){ const full = v => v.length === 4 ? +v : 2000 + +v; const a = full(r[1]), b = full(r[2]); if(b >= a && b - a <= 3 && b >= 1950) return b; }
   const ys = h.match(/(?:19|20)\d\d/g); if(!ys || ys.length !== 1) return null;
   const rest = norm(h.replace(ys[0], ' '));
   return /^(do|od|to|until|up to|pre|before|till|h|q|m|pol|polugodiste|mesec)?[\s\d.\/-]*$/.test(rest) ? +ys[0] : null;
