@@ -1179,9 +1179,11 @@ function openImport(sheets){
      then, so only the newest is imported, named without the year. */
   const groups = new Map();
   items.forEach(it => {
-    const m = /^(.*?\S)[\s\-_.,()]*((?:19|20)\d\d)\)?$/.exec(it.sh.name.trim()); if(!m) return;
+    // "YU 100 2017" or a range like "YU 100 2021-2023" (the later year counts).
+    const m = /^(.*?\S)[\s\-_.,()]*((?:19|20)\d\d)(?:\s*[-–—\/]\s*((?:19|20)?\d\d))?\)?$/.exec(it.sh.name.trim()); if(!m) return;
+    const y2 = m[3] ? +(m[3].length === 2 ? m[2].slice(0,2) + m[3] : m[3]) : +m[2];
     const k = norm(m[1]); if(!groups.has(k)) groups.set(k, []);
-    groups.get(k).push({ it, y:+m[2], base:m[1].trim() });
+    groups.get(k).push({ it, y:Math.max(+m[2], y2), base:m[1].trim() });
   });
   groups.forEach(g => {
     if(g.length < 2) return;
