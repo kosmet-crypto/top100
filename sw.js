@@ -1,6 +1,6 @@
 /* Top 100 service worker: offline support.
    Bump VERSION when shipping changes to the app shell list below. */
-const VERSION = 'top100-v7';
+const VERSION = 'top100-v8';
 const SHELL = [
   './',
   './index.html',

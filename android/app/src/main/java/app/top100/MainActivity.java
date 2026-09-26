@@ -74,7 +74,7 @@ public class MainActivity extends Activity {
                 .build();
 
         webView = new WebView(this);
-        webView.setBackgroundColor(0xFF0E0E13);
+        webView.setBackgroundColor(getColor(R.color.bg));
         setContentView(webView);
 
         WebSettings s = webView.getSettings();
