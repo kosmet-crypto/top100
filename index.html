@@ -275,7 +275,7 @@ const EN = {
   'Premešteno':'Moved','Izvezeno':'Exported','zbir':'total','Plejlista':'Playlist','Da':'Yes',
   'Pozicija je iz tabele, a kretanje se računa od nje.':'Position comes from the sheet; movement is counted from it.',
   'Kretanje se računa od prethodnog kruga.':'Movement is counted from the previous round.',
-  'Lista po godini {0}. Kretanje je u odnosu na {1}.':'Chart for {0}. Movement is compared to {1}.',
+  'Stanje na kraju {0}. godine. Kretanje je u odnosu na kraj {1}.':'The chart at the end of {0}. Movement is compared to the end of {1}.',
   'Nova pesma':'New song','U krugu':'In round','Pokrenut':'Started','Poništi':'Undo','Sve godine':'All years','Tekuća godina':'Current year',
   'Poslednjih {0} godina':'Last {0} years',
   'Kraj {0}. godine':'End of {0}','Broj 1':'Number 1','Kretanje je u odnosu na kraj {0}. godine.':'Movement is compared to the end of {0}.',
@@ -286,7 +286,7 @@ const EN = {
   'Međuzbirovi se preskaču: {0}':'Subtotals are skipped: {0}',
   'Statistika':'Stats','Pesme':'Songs','Svi poeni':'All points','Godina':'Years','Krugova':'Rounds','Poena u {0}':'Points in {0}',
   'Najjača godina: {0} ({1} poena).':'Best year: {0} ({1} points).','{0} u odnosu na {1}: {2}%.':'{0} compared to {1}: {2}%.',
-  'Broj 1 svake godine':'Number 1 of every year','Top 10 izvođača':'Top 10 artists','Najviše pesama u top {0}':'Most songs in the top {0}',
+  'Najviše poena te godine':'Most points that year','Top 10 izvođača':'Top 10 artists','Najviše pesama u top {0}':'Most songs in the top {0}',
   'Koliko vuče vrh liste':'How much the top carries','Top 10 ima {0}% svih poena':'The top 10 hold {0}% of all points','top {0} ima {1}%':'the top {0} hold {1}%',
   'najviše poena u jednoj godini ({0})':'most points in one year ({0})','godina zaredom sa poenima':'years in a row with points','puta na #1':'times at #1','najveći skok ({0})':'biggest climb ({0})','zaredom u top {0}':'in a row in the top {0}',
   'najviše u jednom krugu ({0})':'most in one round ({0})','Rekordi':'Records','Najverniji':'Most loyal','godina sa poenima':'years with points','broj godina':'number of years',
@@ -376,7 +376,7 @@ function rankLabel(l){
   return l.rank==='year' ? T('Tekuća godina') : l.rank==='last' ? T('Poslednjih {0} godina', l.lastN||3) : T('Sve godine');
 }
 function score(s, l, period){
-  if(period !== 'cur') return +s.pts[period] || 0;
+  if(period !== 'cur') return scoreUpTo(s, l, period);  // the chart as it stood at the end of that year
   if(l.rank === 'year') return +s.pts[CY()] || 0;
   if(l.rank === 'last'){ const from = CY() - (l.lastN||3) + 1; let t = 0; for(const y in s.pts) if(+y >= from) t += +s.pts[y] || 0; return t; }
   return total(s);
@@ -387,9 +387,14 @@ function baseMap(l){ return l.base ? new Map(Object.entries(l.base).map(([k,v]) 
 function standing(l){ const rs = roundsOf(l.id); return rs.length ? orderMap(rs[rs.length-1].order) : baseMap(l); }
 /* Ranking; ties go to the higher total, then to whoever stood higher before. */
 function ranked(l, period = 'cur', tie){
+  if(period !== 'cur' && !tie){
+    // A year that is in the history by year: use that saved end-of-year standing.
+    const r = roundsOf(l.id).find(x => x.auto && x.year === period);
+    if(r) return r.order.map(songById).filter(s => s && s.list === l.id);
+  }
   tie = tie || (period === 'cur' ? standing(l) : new Map());
   let arr = songsOf(l.id).map(s => ({ s, sc:score(s,l,period), t:total(s), p:tie.get(s.id) ?? 1e9 }));
-  if(period !== 'cur') arr = arr.filter(x => x.sc);
+  if(period !== 'cur') arr = arr.filter(x => Object.keys(x.s.pts).some(y => +y <= period && +x.s.pts[y]));
   arr.sort((a,b) => b.sc-a.sc || b.t-a.t || a.p-b.p || a.s.title.localeCompare(b.s.title));
   return arr.map(x => x.s);
 }
@@ -398,7 +403,7 @@ function moveCtx(l, period){
   const N = l.size || 100;
   if(period !== 'cur'){
     const prevYear = ranked(l, period-1), ever = new Set();
-    songsOf(l.id).forEach(s => { for(const y in s.pts) if(+y < period && +s.pts[y]) ever.add(s.id); });
+    yearsOf(l).filter(y => y < period-1).forEach(y => ranked(l, y).slice(0, N).forEach(s => ever.add(s.id)));
     return { prev: prevYear.length ? orderMap(prevYear.map(s=>s.id)) : new Map(), ever, N, any: prevYear.length > 0 };
   }
   const rs = roundsOf(l.id), ever = new Set();
@@ -454,7 +459,7 @@ function render(){
     if(ui.view === 'history') h += historyView(l);
     else if(ui.view === 'stats') h += statsView(l);
     else {
-      const ys = yearsOf(l).reverse();
+      const ys = yearsOf(l).filter(y => y < CY()).reverse();
       if(ui.period !== 'cur' && !ys.includes(ui.period)) ui.period = 'cur';
       if(ys.length) h += '<div class="chips">' + [['cur',T('Aktuelna')], ...ys.map(y => [y, String(y)])].map(([v,t]) => '<button class="chip sm'+(ui.period===v?' on':'')+'" data-a="period" data-v="'+v+'">'+esc(t)+'</button>').join('') + '</div>';
       if(ui.view === 'list'){
@@ -484,7 +489,7 @@ function listRows(l){
     if(r.pos > N && !showAll) return;
     if(r.pos === N+1 && !q) h += '<button class="cut" data-a="below">— '+esc(T('Sakrij ispod crte'))+' —</button>';
     const s = r.s, sc = score(s, l, period);
-    const small = period === 'cur' ? (+s.pts[cy] ? cy+': '+fmt(s.pts[cy]) : '') : T('zbir')+' '+fmt(total(s));
+    const small = period === 'cur' ? (+s.pts[cy] ? cy+': '+fmt(s.pts[cy]) : '') : (+s.pts[period] ? period+': '+fmt(s.pts[period]) : '');
     h += '<div class="row'+(r.pos===1?' p1':'')+'" data-a="song" data-id="'+s.id+'"><div class="pos">'+r.pos+'</div><div class="mv">'+moveOf(ctx, s.id, r.pos)+'</div>'
       + '<div class="main"><div class="t">'+esc(s.title)+(l.showPl && s.pl ? '<i class="pl"></i>' : '')+'</div><div class="a">'+esc(s.artist)+'</div></div>'
       + '<div class="sc"><b>'+fmt(sc)+'</b><small>'+esc(small)+'</small></div></div>';
@@ -492,7 +497,7 @@ function listRows(l){
   h += '</div>';
   if(below && !showAll) h += '<button class="cut" style="border:0" data-a="below">'+esc(T('Prikaži još {0} ispod crte', below))+'</button>';
   let note = '';
-  if(period !== 'cur') note = T('Lista po godini {0}. Kretanje je u odnosu na {1}.', period, period-1);
+  if(period !== 'cur') note = T('Stanje na kraju {0}. godine. Kretanje je u odnosu na kraj {1}.', period, period-1);
   else if(roundsOf(l.id).length){ const lr = roundsOf(l.id).slice(-1)[0]; note = lr.auto ? T('Kretanje je u odnosu na kraj {0}. godine.', lr.year-1) : T('Kretanje se računa od prethodnog kruga.'); }
   else if(l.base && l.basePos) note = T('Pozicija je iz tabele, a kretanje se računa od nje.');
   if(note) h += '<p class="note" style="text-align:center;margin-top:12px">'+esc(note)+'</p>';
@@ -549,7 +554,7 @@ function statsView(l){
 
   // number 1 of every year
   if(years.length > 1){
-    h += card(T('Broj 1 svake godine'), '<ul class="mini">' + years.slice().reverse().map(y => { const t = ranked(l, y)[0]; return t ? '<li data-a="song" data-id="'+t.id+'" style="cursor:pointer"><span class="n">'+y+'</span><span class="x">'+esc(t.title)+' <small>'+esc(t.artist)+'</small></span><span class="r">'+fmt(t.pts[y])+'</span></li>' : ''; }).join('') + '</ul>');
+    h += card(T('Najviše poena te godine'), '<ul class="mini">' + years.slice().reverse().map(y => { const t = songs.filter(s => +s.pts[y]).sort((a,b) => b.pts[y]-a.pts[y] || total(b)-total(a))[0]; return t ? '<li data-a="song" data-id="'+t.id+'" style="cursor:pointer"><span class="n">'+y+'</span><span class="x">'+esc(t.title)+' <small>'+esc(t.artist)+'</small></span><span class="r">'+fmt(t.pts[y])+'</span></li>' : ''; }).join('') + '</ul>');
   }
 
   // top artists

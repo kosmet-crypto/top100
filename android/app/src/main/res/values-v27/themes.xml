@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Light by day, dark at night (values-night). The WebView reports this theme to the page as
-     prefers-color-scheme, so the page's "Automatic" theme follows the phone. -->
 <resources>
     <style name="Theme.Top100" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/bg</item>
         <item name="android:statusBarColor">@color/bg</item>
         <item name="android:navigationBarColor">@color/bg</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 </resources>
