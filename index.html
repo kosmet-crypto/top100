@@ -282,7 +282,8 @@ const EN = {
   'Lider liste na kraju godine':'Chart leader at the end of each year','zbir do te godine':'total up to that year',
   'Istorija po godinama (jedan rezultat za svaku godinu)':'History by year (one result for every year)','Napravi istoriju po godinama':'Build history by year',
   'Napraviti istoriju po godinama? Za svaku završenu godinu pravi se jedan rezultat, a tvoji krugovi ostaju.':'Build history by year? One result is made for every finished year; your rounds stay.',
-  'Godina u istoriji: {0}':'Years in history: {0}','međuzbir':'subtotal','Kolone {0} se računaju jer ih računa i tvoj zbir.':'Columns {0} are counted because your total counts them too.',
+  'Godina u istoriji: {0}':'Years in history: {0}','međuzbir':'subtotal','Obriši sve liste':'Delete all lists','Obriši sve':'Delete all','Sve liste su obrisane':'All lists deleted',
+  'Obrisati sve liste, pesme i istoriju? Podešavanja ostaju. Ovo ne može da se vrati.':'Delete all lists, songs and history? Settings stay. This cannot be undone.','Kolone {0} se računaju jer ih računa i tvoj zbir.':'Columns {0} are counted because your total counts them too.',
   'Međuzbirovi se preskaču: {0}':'Subtotals are skipped: {0}',
   'Statistika':'Stats','Pesme':'Songs','Svi poeni':'All points','Godina':'Years','Krugova':'Rounds','Poena u {0}':'Points in {0}',
   'Najjača godina: {0} ({1} poena).':'Best year: {0} ({1} points).','{0} u odnosu na {1}: {2}%.':'{0} compared to {1}: {2}%.',
@@ -968,7 +969,8 @@ function openSettings(){
     + '<h4>'+esc(T('Brza dugmad'))+'</h4><input class="field" id="qB" value="'+esc(s.quick.join(', '))+'" inputmode="decimal"><p class="note" style="margin-top:6px">'+esc(T('Brojevi odvojeni zarezom, npr. 1, 2, 5'))+'</p>'
     + '<h4>'+esc(T('Podaci'))+'</h4><div class="stack"><button class="btn block" data-a="import">'+esc(T('Uvezi iz [[Excel]]-a ili [[CSV]]-a'))+'</button>'
     + (data.lists.length ? '<button class="btn block" data-a="exportAll">'+esc(T('Izvezi u [[Excel]]'))+'</button>' : '')
-    + '<button class="btn block" data-a="backup">'+esc(T('Napravi rezervnu kopiju'))+'</button><button class="btn block" data-a="restore">'+esc(T('Vrati iz rezervne kopije'))+'</button></div>'
+    + '<button class="btn block" data-a="backup">'+esc(T('Napravi rezervnu kopiju'))+'</button><button class="btn block" data-a="restore">'+esc(T('Vrati iz rezervne kopije'))+'</button>'
+    + (data.lists.length ? '<button class="btn danger block" data-a="wipe">'+esc(T('Obriši sve liste'))+'</button>' : '') + '</div>'
     + '<p class="note" style="margin-top:10px">'+esc(T('Podaci se čuvaju samo na ovom uređaju. Povremeno napravi rezervnu kopiju.'))+'</p>'
     + (ver ? '<h4>'+esc(T('Verzija'))+'</h4><p class="note">Top 100 '+esc(ver)+'</p><button class="btn block mt" data-a="update">'+esc(T('Proveri ažuriranja'))+'</button>' : '')
     + '<button class="btn primary block mt" data-a="close">'+esc(T('Zatvori'))+'</button>', el => {
@@ -1369,6 +1371,12 @@ document.addEventListener('click', async e => {
     case 'exportAll': exportXlsx(data.lists); break;
     case 'backup': backup(); break;
     case 'restore': closeSheet(); restore(); break;
+    case 'wipe': {
+      closeSheet();
+      if(!await confirmSheet(T('Obrisati sve liste, pesme i istoriju? Podešavanja ostaju. Ovo ne može da se vrati.'), T('Obriši sve'))) break;
+      data = fix({ v:1, settings:data.settings }); ui.view = 'list'; ui.period = 'cur'; save(); render(); toast(T('Sve liste su obrisane'));
+      break;
+    }
     case 'update': if(window.Top100Android && Top100Android.checkForUpdate) Top100Android.checkForUpdate(); break;
     case 'listSettings': listSettings(); break;
     case 'view': ui.view = el.dataset.v; render(); break;
